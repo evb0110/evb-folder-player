@@ -49,7 +49,7 @@ export function LibraryScreen({ books, status, busy, onImport, onBook, onHistory
         right={
           <>
             <IconButton name="history" label="History" onPress={onHistory} />
-            <IconButton name="sun" label="Theme" active={panel === 'theme'} onPress={() => togglePanel('theme')} />
+            <IconButton name="theme" label="Theme" active={panel === 'theme'} onPress={() => togglePanel('theme')} />
             <IconButton
               name="plus"
               label="Add audiobooks"
@@ -59,20 +59,25 @@ export function LibraryScreen({ books, status, busy, onImport, onBook, onHistory
           </>
         }
       />
+      {/* Panels sit outside the list so they open in view even when the list is scrolled. */}
+      {panel ? (
+        <View style={s.panels}>
+          {panel === 'theme' ? <ThemePicker /> : null}
+          {panel === 'add' ? (
+            <View style={s.addPanel}>
+              <Action
+                icon="folder"
+                label="Choose a folder"
+                tone="primary"
+                disabled={busy}
+                onPress={() => onImport('folder')}
+              />
+              <Action icon="search" label="Scan device audio" disabled={busy} onPress={() => onImport('device')} />
+            </View>
+          ) : null}
+        </View>
+      ) : null}
       <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
-        {panel === 'theme' ? <ThemePicker /> : null}
-        {panel === 'add' ? (
-          <View style={s.addPanel}>
-            <Action
-              icon="folder"
-              label="Choose a folder"
-              tone="primary"
-              disabled={busy}
-              onPress={() => onImport('folder')}
-            />
-            <Action icon="search" label="Scan device audio" disabled={busy} onPress={() => onImport('device')} />
-          </View>
-        ) : null}
         {busy ? (
           <View style={s.busy}>
             <ActivityIndicator color={colors.mint} />
@@ -225,6 +230,7 @@ const useStyles = createThemedStyles(colors =>
     content: { paddingHorizontal: 20, paddingBottom: 28 },
     pressed: { opacity: 0.7 },
     screen: { flex: 1 },
+    panels: { paddingHorizontal: 20, paddingBottom: 8 },
     addPanel: { backgroundColor: colors.surface, borderRadius: 20, padding: 14, marginTop: 8, gap: 10 },
     busy: { flexDirection: 'row', gap: 12, paddingVertical: 18, alignItems: 'center' },
     busyText: { color: colors.muted, fontFamily: fonts.regular, fontSize: 14 },

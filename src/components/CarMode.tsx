@@ -53,7 +53,7 @@ export function CarMode({ book, status, keepAwake, onKeepAwake, onExit, onUndo, 
             {/* Shown only after a jump that can be reverted; a disabled icon alone reads as broken. */}
             {status.canUndo ? <IconButton name="undo" label="Undo last jump" onPress={onUndo} /> : null}
             <IconButton
-              name="sun"
+              name={keepAwake ? 'screenOn' : 'screen'}
               label={keepAwake ? 'Screen stays on' : 'Screen can sleep'}
               active={keepAwake}
               onPress={() => onKeepAwake(!keepAwake)}

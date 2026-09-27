@@ -17,7 +17,10 @@ const paths = {
   refresh: 'M20 4v6h-6M20 10a8 8 0 1 0-1 8',
   search: 'M16 16l5 5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0',
   clock: 'M12 7v5l3 2',
-  sun: 'M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5',
+  theme: 'M12 3v18',
+  screen: 'M9 3h6a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1ZM11 18h2',
+  screenOn:
+    'M9 3h6a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1ZM11 18h2M4.5 8 2.5 7M4.5 12h-2M4.5 16l-2 1M19.5 8l2-1M19.5 12h2M19.5 16l2 1',
   rewind: 'M4 12a8 8 0 1 0 8-8h-1M13.5 1.5 11 4l2.5 2.5',
   forward: 'M20 12a8 8 0 1 1-8-8h1M10.5 1.5 13 4l-2.5 2.5',
   volume: 'M3 9h4l5-4v14l-5-4H3ZM16 8a6 6 0 0 1 0 8M19 5a10 10 0 0 1 0 14',
@@ -26,7 +29,10 @@ const paths = {
 export type TIcon = keyof typeof paths;
 
 /** Icons with an extra circle drawn under the path. */
-const circles: Partial<Record<TIcon, number>> = { clock: 9, sun: 4 };
+const circles: Partial<Record<TIcon, number>> = { clock: 9, theme: 9 };
+
+/** Solid shapes drawn in the icon color: the dark half of the theme (contrast) icon. */
+const solids: Partial<Record<TIcon, string>> = { theme: 'M12 3a9 9 0 0 1 0 18Z' };
 
 const hidden = Platform.OS === 'web' ? { 'aria-hidden': true } : { accessible: false };
 
@@ -40,6 +46,7 @@ interface IIconProps {
 
 export function Icon({ name, size = 24, color = 'currentColor', filled = false }: IIconProps) {
   const radius = circles[name];
+  const solid = solids[name];
   return (
     <Svg
       width={size}
@@ -53,6 +60,7 @@ export function Icon({ name, size = 24, color = 'currentColor', filled = false }
       {...hidden}
     >
       {radius ? <Circle cx="12" cy="12" r={radius} /> : null}
+      {solid ? <Path d={solid} fill={color} /> : null}
       <Path d={paths[name]} fill={filled && name === 'play' ? color : 'none'} />
     </Svg>
   );
