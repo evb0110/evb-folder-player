@@ -2,16 +2,16 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import { useLandscape } from '../frame';
 import { createThemedStyles, fonts, touch, useTheme } from '../theme';
-import { clockTime, percent } from '../player/format';
+import { clockTime } from '../player/format';
 import { bookPlayback, sleepMinutesLeft, SLEEP_MINUTES, SPEEDS, type IBookPlayback } from '../player/playback';
 import type { TRunCommand } from '../player/usePlayer';
 import type { IBook, IStatus, ITrack } from '../player/types';
-import { IconButton, Progress, Segmented } from './Controls';
+import { IconButton, Segmented } from './Controls';
 import { BookCover } from './BookCover';
 import { ChapterList } from './ChapterList';
 import { Header } from './Header';
 import { Icon, type TIcon } from './Icon';
-import { PlayButton, PositionSlider, SeekButton } from './Transport';
+import { PlayButton, PositionSlider, Scrubber, SeekButton } from './Transport';
 
 export type TPlayerTab = 'listen' | 'chapters';
 
@@ -42,6 +42,7 @@ export function PlayerScreen({ book, status, tab, onTab, onBack, onCarMode, onHi
   const controls: ITransportActions = {
     toggle: () => void command(playback.active ? { action: 'toggle' } : { action: 'open', bookId: book.id }),
     skip: delta => void command({ action: 'skip', delta }),
+    seek: position => void command({ action: 'seek', position }),
   };
   const chooseTrack = (track: ITrack) =>
     void command(
@@ -81,6 +82,7 @@ export function PlayerScreen({ book, status, tab, onTab, onBack, onCarMode, onHi
 interface ITransportActions {
   toggle: () => void;
   skip: (delta: number) => void;
+  seek: (position: number) => void;
 }
 
 interface IListenProps {
@@ -147,7 +149,7 @@ function ListenView({ book, status, playback, controls, command, onChapters, onH
           position={playback.position}
           duration={playback.duration}
           disabled={!playback.active}
-          onSeek={position => void command({ action: 'seek', position })}
+          onSeek={controls.seek}
         />
         <View style={s.transport}>
           <SeekButton forward={false} size="regular" disabled={!playback.active} onSkip={controls.skip} />
@@ -257,10 +259,20 @@ interface IDockProps {
 /** Compact controls under the chapter list, so the list keeps most of the screen. */
 function Dock({ playback, controls, onExpand }: IDockProps) {
   const s = useStyles();
-  const time = `${clockTime(playback.position)}${playback.duration ? ` / ${clockTime(playback.duration)}` : ''}`;
+  const [scrub, setScrub] = useState<number | null>(null);
+  const shown = scrub ?? playback.position;
+  const time = `${clockTime(shown)}${playback.duration ? ` / ${clockTime(playback.duration)}` : ''}`;
   return (
     <View style={s.dock}>
-      <Progress value={percent(playback.position, playback.duration)} style={s.dockProgress} />
+      <View style={s.dockScrubber}>
+        <Scrubber
+          position={playback.position}
+          duration={playback.duration}
+          onSeek={controls.seek}
+          onScrub={setScrub}
+          disabled={!playback.active}
+        />
+      </View>
       <View style={s.dockRow}>
         <Pressable
           accessibilityRole="button"
@@ -336,7 +348,7 @@ const useStyles = createThemedStyles(colors =>
     toolLabel: { color: colors.subtle, fontFamily: fonts.medium, fontSize: 11.5 },
 
     dock: { backgroundColor: colors.elevated },
-    dockProgress: { height: 2, borderRadius: 0 },
+    dockScrubber: { paddingHorizontal: 20, marginBottom: -12 },
     dockRow: { flexDirection: 'row', alignItems: 'center', paddingLeft: 20, paddingRight: 12, paddingVertical: 8 },
     dockInfo: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: touch.min },
     dockTitles: { flex: 1, gap: 3 },

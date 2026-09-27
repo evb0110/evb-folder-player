@@ -1,10 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import Slider from '@react-native-community/slider';
 import { createThemedStyles, fonts, touch, useTheme } from '../theme';
-import { clockTime, percent } from '../player/format';
+import { clockTime } from '../player/format';
 import { SKIP_MS } from '../player/playback';
-import { Progress } from './Controls';
 import { Icon } from './Icon';
 
 type TSize = 'compact' | 'regular' | 'car';
@@ -65,42 +63,100 @@ export function PlayButton({ playing, loading, size, onPress }: IPlayButtonProps
   );
 }
 
-interface IPositionProps {
+/** How long a released drag keeps showing its target while the player catches up. */
+const HOLD_MS = 1500;
+
+interface IScrubberProps {
   position: number;
   duration: number;
-  /** Omit to show a read-only bar, as in car mode where a stray touch must not seek. */
-  onSeek?: (position: number) => void;
+  onSeek: (position: number) => void;
+  /** Reports the position under the finger while dragging, then `null` once the player has caught up. */
+  onScrub?: (position: number | null) => void;
   disabled?: boolean;
 }
 
-export function PositionSlider({ position, duration, onSeek, disabled }: IPositionProps) {
-  const { colors } = useTheme();
+/**
+ * Finger-sized position bar: the whole 56 px tall strip responds, so a tap anywhere jumps there
+ * and a drag follows the finger. Stock sliders on Android only react within a thin line.
+ */
+export function Scrubber({ position, duration, onSeek, onScrub, disabled }: IScrubberProps) {
   const s = useStyles();
-  const [dragging, setDragging] = useState<number | null>(null);
-  const shown = dragging ?? position;
+  const [width, setWidth] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [held, setHeld] = useState<number | null>(null);
+  const release = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(release.current), []);
+
+  const enabled = !disabled && duration > 0;
+  const clamp = (value: number) => Math.round(Math.min(duration, Math.max(0, value)));
+  const at = (x: number) => clamp((x / Math.max(width, 1)) * duration);
+  const show = (value: number | null) => {
+    setHeld(value);
+    onScrub?.(value);
+  };
+  const begin = (x: number) => {
+    clearTimeout(release.current);
+    setDragging(true);
+    show(at(x));
+  };
+  const finish = (x: number) => {
+    const target = at(x);
+    setDragging(false);
+    show(target);
+    onSeek(target);
+    release.current = setTimeout(() => show(null), HOLD_MS);
+  };
+  const cancel = () => {
+    setDragging(false);
+    show(null);
+  };
+
+  const value = held ?? position;
+  const offset = `${duration > 0 ? (clamp(value) / duration) * 100 : 0}%` as const;
+  return (
+    <View
+      style={s.scrubber}
+      onLayout={event => setWidth(event.nativeEvent.layout.width)}
+      accessible
+      accessibilityRole="adjustable"
+      accessibilityLabel="Playback position"
+      accessibilityState={{ disabled: !enabled }}
+      accessibilityValue={{ text: clockTime(value) }}
+      accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+      onAccessibilityAction={event => {
+        if (enabled) onSeek(clamp(value + (event.nativeEvent.actionName === 'increment' ? SKIP_MS : -SKIP_MS)));
+      }}
+      onStartShouldSetResponder={() => enabled}
+      onMoveShouldSetResponder={() => enabled}
+      onResponderTerminationRequest={() => false}
+      onResponderGrant={event => begin(event.nativeEvent.locationX)}
+      onResponderMove={event => show(at(event.nativeEvent.locationX))}
+      onResponderRelease={event => finish(event.nativeEvent.locationX)}
+      onResponderTerminate={cancel}
+    >
+      <View style={[s.track, !enabled && s.disabled]}>
+        <View style={[s.fill, { width: offset }]} />
+      </View>
+      <View style={[s.thumb, dragging && s.thumbDragging, !enabled && s.disabled, { left: offset }]} />
+    </View>
+  );
+}
+
+interface IPositionProps {
+  position: number;
+  duration: number;
+  onSeek: (position: number) => void;
+  disabled?: boolean;
+}
+
+/** Position bar with elapsed and remaining time, which follow the finger while dragging. */
+export function PositionSlider({ position, duration, onSeek, disabled }: IPositionProps) {
+  const s = useStyles();
+  const [scrub, setScrub] = useState<number | null>(null);
+  const shown = scrub ?? position;
   return (
     <View>
-      {onSeek ? (
-        <Slider
-          style={s.slider}
-          minimumValue={0}
-          maximumValue={Math.max(duration, 1)}
-          value={position}
-          disabled={disabled || duration <= 0}
-          onSlidingStart={setDragging}
-          onValueChange={setDragging}
-          onSlidingComplete={value => {
-            onSeek(Math.round(value));
-            setDragging(null);
-          }}
-          minimumTrackTintColor={colors.mint}
-          maximumTrackTintColor={colors.line}
-          thumbTintColor={colors.mint}
-          accessibilityLabel="Playback position"
-        />
-      ) : (
-        <Progress value={percent(position, duration)} style={s.readOnlyBar} />
-      )}
+      <Scrubber position={position} duration={duration} onSeek={onSeek} onScrub={setScrub} disabled={disabled} />
       <View style={s.times}>
         <Text style={s.time}>{clockTime(shown)}</Text>
         <Text style={s.timeMuted}>{duration ? `−${clockTime(duration - shown)}` : ''}</Text>
@@ -140,8 +196,20 @@ const useStyles = createThemedStyles(colors =>
       color: colors.text,
       includeFontPadding: false,
     },
-    slider: { width: '100%', height: 40 },
-    readOnlyBar: { marginVertical: 10 },
+    // Children ignore touches so every event lands on the strip itself, with x measured from its left edge.
+    scrubber: { height: touch.min, justifyContent: 'center' },
+    track: { height: 6, borderRadius: 3, backgroundColor: colors.line, overflow: 'hidden', pointerEvents: 'none' },
+    fill: { height: '100%', backgroundColor: colors.mint },
+    thumb: {
+      position: 'absolute',
+      width: 22,
+      height: 22,
+      marginLeft: -11,
+      borderRadius: 11,
+      backgroundColor: colors.mint,
+      pointerEvents: 'none',
+    },
+    thumbDragging: { width: 32, height: 32, marginLeft: -16, borderRadius: 16 },
     times: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 4 },
     time: { color: colors.text, fontFamily: fonts.medium, fontSize: 13, fontVariant: ['tabular-nums'] },
     timeMuted: { color: colors.subtle, fontFamily: fonts.regular, fontSize: 13, fontVariant: ['tabular-nums'] },

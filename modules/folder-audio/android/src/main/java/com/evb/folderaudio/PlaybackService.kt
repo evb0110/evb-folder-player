@@ -137,7 +137,12 @@ class PlaybackService : MediaSessionService() {
     packageManager.getLaunchIntentForPackage(packageName)?.let { launch ->
       builder.setSessionActivity(PendingIntent.getActivity(this, 0, launch, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
     }
-    session = builder.build()
+    session = builder.build().also {
+      // The app drives this player directly instead of through a MediaController, so Media3 would
+      // never learn about the session. Registering it gives playback a media notification and a
+      // foreground service; without that, Android freezes the app shortly after the screen turns off.
+      addSession(it)
+    }
     instance = this
     handler.post(ticker)
   }

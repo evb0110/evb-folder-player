@@ -28,7 +28,7 @@ interface IProps {
   command: TRunCommand;
 }
 
-/** Driving layout: one huge play/pause target, two large jump buttons, nothing that seeks by accident. */
+/** Driving layout: one huge play/pause target and two large jump buttons at the bottom edge. */
 export function CarMode({ book, status, keepAwake, onKeepAwake, onExit, onUndo, command }: IProps) {
   const s = useStyles();
   const landscape = useLandscape();
@@ -71,7 +71,12 @@ export function CarMode({ book, status, keepAwake, onKeepAwake, onExit, onUndo, 
             {playback.track?.title}
           </Text>
           <View style={s.position}>
-            <PositionSlider position={playback.position} duration={playback.duration} />
+            <PositionSlider
+              position={playback.position}
+              duration={playback.duration}
+              onSeek={position => void command({ action: 'seek', position })}
+              disabled={!playback.active}
+            />
           </View>
         </View>
         <View style={[s.controls, landscape && s.controlsLandscape]} onLayout={measure}>
