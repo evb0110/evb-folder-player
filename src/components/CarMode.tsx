@@ -9,8 +9,7 @@ import type { IBook, IStatus } from '../player/types';
 import { IconButton } from './Controls';
 import { PlayButton, PositionSlider, SeekButton } from './Transport';
 
-/** Space reserved beside or under the play button for the jump buttons. */
-const SEEK_ROW = 150;
+/** Width reserved on each side of the play button for the landscape jump buttons. */
 const SEEK_WIDTH = 130;
 
 function KeepAwake() {
@@ -37,11 +36,10 @@ export function CarMode({ book, status, keepAwake, onKeepAwake, onExit, onUndo, 
   const toggle = () => void command(playback.active ? { action: 'toggle' } : { action: 'open', bookId: book.id });
   const skip = (delta: number) => void command({ action: 'skip', delta });
 
-  // Portrait stacks the jump buttons under the play button; landscape puts them beside it.
-  const room = landscape
-    ? Math.min(area.height, area.width - 2 * SEEK_WIDTH)
-    : Math.min(area.width, area.height - SEEK_ROW);
-  const playSize = Math.round(Math.max(140, Math.min(320, room - 16)));
+  // Portrait pins the jump buttons to the bottom edge, within thumb reach, and gives the play
+  // button the space in between. Landscape puts them beside it.
+  const room = landscape ? Math.min(area.height, area.width - 2 * SEEK_WIDTH) : Math.min(area.width, area.height);
+  const playSize = Math.round(Math.max(140, Math.min(360, room - 24)));
   const measure = (event: LayoutChangeEvent) => setArea(event.nativeEvent.layout);
 
   return (
@@ -50,7 +48,8 @@ export function CarMode({ book, status, keepAwake, onKeepAwake, onExit, onUndo, 
       <View style={s.header}>
         <IconButton name="close" label="Exit car mode" large onPress={onExit} />
         <View style={s.headerActions}>
-          <IconButton name="undo" label="Undo last jump" large disabled={!status.canUndo} onPress={onUndo} />
+          {/* Shown only after a jump that can be reverted; a disabled icon alone reads as broken. */}
+          {status.canUndo ? <IconButton name="undo" label="Undo last jump" large onPress={onUndo} /> : null}
           <IconButton
             large
             name="sun"
@@ -77,18 +76,17 @@ export function CarMode({ book, status, keepAwake, onKeepAwake, onExit, onUndo, 
             <>
               {landscape ? <SeekButton forward={false} size="car" disabled={!playback.active} onSkip={skip} /> : null}
               <PlayButton playing={playback.playing} loading={playback.loading} size={playSize} onPress={toggle} />
-              {landscape ? (
-                <SeekButton forward size="car" disabled={!playback.active} onSkip={skip} />
-              ) : (
-                <View style={s.seekRow}>
-                  <SeekButton forward={false} size="car" disabled={!playback.active} onSkip={skip} />
-                  <SeekButton forward size="car" disabled={!playback.active} onSkip={skip} />
-                </View>
-              )}
+              {landscape ? <SeekButton forward size="car" disabled={!playback.active} onSkip={skip} /> : null}
             </>
           ) : null}
         </View>
       </View>
+      {landscape ? null : (
+        <View style={s.seekRow}>
+          <SeekButton forward={false} size="car" disabled={!playback.active} onSkip={skip} />
+          <SeekButton forward size="car" disabled={!playback.active} onSkip={skip} />
+        </View>
+      )}
     </View>
   );
 }
@@ -103,7 +101,7 @@ const useStyles = createThemedStyles(colors =>
       left: 0,
       backgroundColor: colors.bg,
       paddingHorizontal: 16,
-      paddingBottom: 12,
+      paddingBottom: 16,
     },
     header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
     headerActions: { flexDirection: 'row', gap: 6 },
@@ -131,6 +129,6 @@ const useStyles = createThemedStyles(colors =>
     position: { alignSelf: 'stretch', marginTop: 8 },
     controls: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     controlsLandscape: { flexDirection: 'row', alignSelf: 'stretch', gap: 8 },
-    seekRow: { flexDirection: 'row', alignItems: 'center', alignSelf: 'stretch', gap: 12, marginTop: 20 },
+    seekRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
   }),
 );

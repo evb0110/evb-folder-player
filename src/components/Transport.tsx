@@ -125,7 +125,7 @@ const useStyles = createThemedStyles(colors =>
     },
     seekCar: {
       flex: 1,
-      minHeight: 116,
+      minHeight: 132,
       borderRadius: 28,
       backgroundColor: colors.surface,
       alignItems: 'center',
