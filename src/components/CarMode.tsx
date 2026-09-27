@@ -48,6 +48,7 @@ export function CarMode({ book, status, keepAwake, onKeepAwake, onExit, onUndo, 
       {keepAwake ? <KeepAwake /> : null}
       <Header
         left={<IconButton name="close" label="Exit car mode" onPress={onExit} />}
+        title="Car mode"
         right={
           <>
             {/* Shown only after a jump that can be reverted; a disabled icon alone reads as broken. */}
