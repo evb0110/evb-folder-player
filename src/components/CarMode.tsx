@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { StyleSheet, Text, useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
+import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import { useKeepAwake } from 'expo-keep-awake';
+import { useLandscape } from '../frame';
 import { createThemedStyles, fonts } from '../theme';
 import { bookPlayback } from '../player/playback';
 import type { TRunCommand } from '../player/usePlayer';
@@ -30,8 +31,7 @@ interface IProps {
 /** Driving layout: one huge play/pause target, two large jump buttons, nothing that seeks by accident. */
 export function CarMode({ book, status, keepAwake, onKeepAwake, onExit, onUndo, command }: IProps) {
   const s = useStyles();
-  const { width, height } = useWindowDimensions();
-  const landscape = width > height;
+  const landscape = useLandscape();
   const playback = bookPlayback(book, status);
   const [area, setArea] = useState({ width: 0, height: 0 });
   const toggle = () => void command(playback.active ? { action: 'toggle' } : { action: 'open', bookId: book.id });
@@ -48,10 +48,11 @@ export function CarMode({ book, status, keepAwake, onKeepAwake, onExit, onUndo, 
     <View style={s.screen}>
       {keepAwake ? <KeepAwake /> : null}
       <View style={s.header}>
-        <IconButton name="close" label="Exit car mode" onPress={onExit} />
+        <IconButton name="close" label="Exit car mode" large onPress={onExit} />
         <View style={s.headerActions}>
-          <IconButton name="undo" label="Undo last jump" disabled={!status.canUndo} onPress={onUndo} />
+          <IconButton name="undo" label="Undo last jump" large disabled={!status.canUndo} onPress={onUndo} />
           <IconButton
+            large
             name="sun"
             label={keepAwake ? 'Screen stays on' : 'Screen can sleep'}
             active={keepAwake}
@@ -110,8 +111,16 @@ const useStyles = createThemedStyles(colors =>
     bodyLandscape: { flexDirection: 'row', alignItems: 'center', gap: 16 },
     info: { alignItems: 'center', paddingHorizontal: 8, paddingBottom: 8 },
     infoLandscape: { width: '32%' },
-    book: { color: colors.text, fontFamily: fonts.display, fontSize: 24, lineHeight: 31, textAlign: 'center' },
+    book: {
+      alignSelf: 'stretch',
+      color: colors.text,
+      fontFamily: fonts.display,
+      fontSize: 24,
+      lineHeight: 31,
+      textAlign: 'center',
+    },
     chapter: {
+      alignSelf: 'stretch',
       color: colors.muted,
       fontFamily: fonts.regular,
       fontSize: 16,

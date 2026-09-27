@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
-import { createThemedStyles, fonts, useTheme } from '../theme';
+import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { useLandscape } from '../frame';
+import { createThemedStyles, fonts, touch, useTheme } from '../theme';
 import { clockTime, percent } from '../player/format';
 import { bookPlayback, sleepMinutesLeft, SLEEP_MINUTES, SPEEDS, type IBookPlayback } from '../player/playback';
 import type { TRunCommand } from '../player/usePlayer';
@@ -94,8 +95,7 @@ interface IListenProps {
 function ListenView({ book, status, playback, controls, command, onChapters, onHistory, onUndo }: IListenProps) {
   const { colors } = useTheme();
   const s = useStyles();
-  const { width, height } = useWindowDimensions();
-  const landscape = width > height;
+  const landscape = useLandscape();
   const [menu, setMenu] = useState<'speed' | 'sleep' | null>(null);
   const [coverSize, setCoverSize] = useState(0);
   const sleepLeft = sleepMinutesLeft(status.sleepAt);
@@ -264,7 +264,12 @@ function Dock({ playback, controls, onExpand }: IDockProps) {
           <Text style={s.dockTime}>{time}</Text>
         </Pressable>
         <SeekButton forward={false} size="compact" disabled={!playback.active} onSkip={controls.skip} />
-        <PlayButton playing={playback.playing} loading={playback.loading} size={58} onPress={controls.toggle} />
+        <PlayButton
+          playing={playback.playing}
+          loading={playback.loading}
+          size={touch.button}
+          onPress={controls.toggle}
+        />
         <SeekButton forward size="compact" disabled={!playback.active} onSkip={controls.skip} />
       </View>
     </View>
@@ -280,16 +285,24 @@ const useStyles = createThemedStyles(colors =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingHorizontal: 8,
-      paddingVertical: 6,
+      paddingHorizontal: 4,
+      paddingVertical: 4,
     },
 
     listen: { flex: 1 },
     listenLandscape: { flexDirection: 'row', alignItems: 'center' },
     info: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28 },
     cover: { marginBottom: 18 },
-    bookTitle: { fontFamily: fonts.display, color: colors.text, fontSize: 24, lineHeight: 31, textAlign: 'center' },
+    bookTitle: {
+      alignSelf: 'stretch',
+      fontFamily: fonts.display,
+      color: colors.text,
+      fontSize: 24,
+      lineHeight: 31,
+      textAlign: 'center',
+    },
     chapterTitle: {
+      alignSelf: 'stretch',
       fontFamily: fonts.regular,
       color: colors.muted,
       fontSize: 15,
@@ -297,7 +310,7 @@ const useStyles = createThemedStyles(colors =>
       textAlign: 'center',
       marginTop: 6,
     },
-    chapterLink: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 44, paddingHorizontal: 12 },
+    chapterLink: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: touch.min, paddingHorizontal: 16 },
     chapterCount: { fontFamily: fonts.medium, color: colors.subtle, fontSize: 13 },
 
     controls: { paddingHorizontal: 20, paddingBottom: 6 },
@@ -305,14 +318,14 @@ const useStyles = createThemedStyles(colors =>
     transport: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 22, paddingVertical: 10 },
     menu: { marginTop: 6 },
     tools: { flexDirection: 'row', marginTop: 6, marginHorizontal: -12 },
-    tool: { flex: 1, minHeight: 62, alignItems: 'center', justifyContent: 'center', gap: 5 },
+    tool: { flex: 1, minHeight: 68, alignItems: 'center', justifyContent: 'center', gap: 5 },
     toolText: { fontFamily: fonts.bold, fontSize: 17, lineHeight: 22 },
     toolLabel: { color: colors.subtle, fontFamily: fonts.medium, fontSize: 11.5 },
 
     dock: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.line, backgroundColor: colors.bg },
     dockProgress: { height: 2, borderRadius: 0 },
     dockRow: { flexDirection: 'row', alignItems: 'center', paddingLeft: 20, paddingRight: 10, paddingVertical: 8 },
-    dockInfo: { flex: 1, minHeight: 52, justifyContent: 'center', gap: 3, paddingRight: 6 },
+    dockInfo: { flex: 1, minHeight: touch.min, justifyContent: 'center', gap: 3, paddingRight: 6 },
     dockTitle: { fontFamily: fonts.medium, color: colors.text, fontSize: 14 },
     dockTime: { fontFamily: fonts.regular, color: colors.subtle, fontSize: 12, fontVariant: ['tabular-nums'] },
   }),

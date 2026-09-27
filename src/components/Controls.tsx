@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
-import { createThemedStyles, fonts, useTheme } from '../theme';
+import { createThemedStyles, fonts, touch, useTheme } from '../theme';
 import { Icon, type TIcon } from './Icon';
 
 interface IActionProps {
@@ -44,9 +44,11 @@ interface IIconButtonProps {
   onPress: () => void;
   active?: boolean;
   disabled?: boolean;
+  /** Car mode uses larger targets. */
+  large?: boolean;
 }
 
-export function IconButton({ name, label, onPress, active, disabled }: IIconButtonProps) {
+export function IconButton({ name, label, onPress, active, disabled, large }: IIconButtonProps) {
   const { colors } = useTheme();
   const s = useStyles();
   return (
@@ -58,12 +60,13 @@ export function IconButton({ name, label, onPress, active, disabled }: IIconButt
       accessibilityState={{ selected: active, disabled }}
       style={({ pressed }) => [
         s.iconButton,
+        large && s.iconButtonLarge,
         active && s.iconButtonActive,
         pressed && s.pressed,
         disabled && s.disabled,
       ]}
     >
-      <Icon name={name} size={26} color={active ? colors.mint : colors.text} />
+      <Icon name={name} size={large ? 36 : 30} color={active ? colors.mint : colors.text} />
     </Pressable>
   );
 }
@@ -127,16 +130,30 @@ const useStyles = createThemedStyles(colors =>
       paddingHorizontal: 18,
       paddingVertical: 12,
     },
-    compact: { minHeight: 52, paddingVertical: 10, paddingHorizontal: 14 },
+    compact: { minHeight: touch.min, paddingVertical: 10, paddingHorizontal: 14 },
     primary: { backgroundColor: colors.mint },
     quiet: { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.line },
     label: { color: colors.text, fontFamily: fonts.bold, fontSize: 16 },
     pressed: { opacity: 0.72 },
     disabled: { opacity: 0.4 },
-    iconButton: { width: 52, height: 52, alignItems: 'center', justifyContent: 'center', borderRadius: 26 },
+    iconButton: {
+      width: touch.button,
+      height: touch.button,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: touch.button / 2,
+    },
+    iconButtonLarge: { width: touch.large, height: touch.large, borderRadius: touch.large / 2 },
     iconButtonActive: { backgroundColor: colors.surface },
-    segmented: { flexDirection: 'row', backgroundColor: colors.surface, borderRadius: 26, padding: 3 },
-    segment: { minHeight: 48, paddingHorizontal: 16, justifyContent: 'center', alignItems: 'center', borderRadius: 24 },
+    segmented: { flexDirection: 'row', backgroundColor: colors.surface, borderRadius: touch.min / 2 + 3, padding: 3 },
+    segment: {
+      minHeight: touch.min,
+      minWidth: touch.min,
+      paddingHorizontal: 14,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderRadius: touch.min / 2,
+    },
     segmentFill: { flex: 1, paddingHorizontal: 2 },
     segmentSelected: { backgroundColor: colors.mint },
     segmentText: { color: colors.muted, fontFamily: fonts.medium, fontSize: 15 },

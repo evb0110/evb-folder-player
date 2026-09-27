@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import Slider from '@react-native-community/slider';
-import { createThemedStyles, fonts, useTheme } from '../theme';
+import { createThemedStyles, fonts, touch, useTheme } from '../theme';
 import { clockTime, percent } from '../player/format';
 import { SKIP_MS } from '../player/playback';
 import { Progress } from './Controls';
@@ -114,7 +114,7 @@ const useStyles = createThemedStyles(colors =>
     pressed: { opacity: 0.6 },
     disabled: { opacity: 0.4 },
     play: { backgroundColor: colors.mint, alignItems: 'center', justifyContent: 'center' },
-    seekCompact: { width: 52, height: 52, alignItems: 'center', justifyContent: 'center' },
+    seekCompact: { width: touch.button, height: touch.button, alignItems: 'center', justifyContent: 'center' },
     seekRegular: {
       width: 72,
       height: 72,

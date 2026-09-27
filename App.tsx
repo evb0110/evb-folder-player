@@ -1,9 +1,19 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, BackHandler, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  BackHandler,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
-import { createThemedStyles, fonts, ThemeProvider, useTheme } from './src/theme';
+import { Frame } from './src/frame';
+import { createThemedStyles, fonts, ThemeProvider, touch, useTheme } from './src/theme';
 import { usePlayer } from './src/player/usePlayer';
 import type { IHistoryEntry } from './src/player/types';
 import { LibraryScreen } from './src/components/LibraryScreen';
@@ -15,6 +25,15 @@ import { Icon } from './src/components/Icon';
 
 type TScreen = 'library' | 'player' | 'history';
 
+/** A desktop browser previews the app at phone size instead of stretching it across the window. */
+const PHONE = { width: 412, height: 892 };
+
+function usePhoneFrame() {
+  const window = useWindowDimensions();
+  const desktop = Platform.OS === 'web' && window.width >= PHONE.width + 80 && window.height >= 640;
+  return desktop ? { width: PHONE.width, height: Math.min(PHONE.height, window.height - 48) } : null;
+}
+
 /** Opening a screen already in the stack returns to it instead of stacking a duplicate. */
 function pushScreen(stack: TScreen[], screen: TScreen) {
   const index = stack.indexOf(screen);
@@ -24,6 +43,7 @@ function pushScreen(stack: TScreen[], screen: TScreen) {
 function PlayerApp() {
   const { dark } = useTheme();
   const s = useStyles();
+  const phone = usePhoneFrame();
   const model = usePlayer();
   const { status, command } = model;
   const [stack, setStack] = useState<TScreen[]>(['library']);
@@ -78,9 +98,9 @@ function PlayerApp() {
   const showPlayer = screen === 'player' && selectedBook;
 
   return (
-    <SafeAreaView style={s.safe} edges={['top', 'bottom', 'left', 'right']}>
+    <SafeAreaView style={[s.safe, phone && s.desktop]} edges={['top', 'bottom', 'left', 'right']}>
       <StatusBar style={dark ? 'light' : 'dark'} />
-      <View style={[s.app, carMode && s.carApp]}>
+      <Frame style={[s.app, carMode && s.carApp, phone && [s.phone, phone]]}>
         {error ? <ErrorBanner text={error} onDismiss={model.message ? model.dismissMessage : undefined} /> : null}
         <View style={s.main}>
           {/* Car mode covers the player instead of replacing it, so the chapter list keeps its place. */}
@@ -139,7 +159,7 @@ function PlayerApp() {
             onToggle={() => void command({ action: 'toggle' })}
           />
         ) : null}
-      </View>
+      </Frame>
     </SafeAreaView>
   );
 }
@@ -195,6 +215,16 @@ const useStyles = createThemedStyles(colors =>
       ...(Platform.OS === 'web' ? { boxShadow: '0 0 100px #00000030' } : {}),
     },
     carApp: { maxWidth: 1100 },
+    desktop: { justifyContent: 'center' },
+    phone: {
+      flexGrow: 0,
+      flexBasis: 'auto',
+      flexShrink: 0,
+      borderRadius: 32,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: colors.line,
+    },
     main: { flex: 1, minHeight: 0 },
     loading: { flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
     error: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 16, backgroundColor: colors.errorBg },
@@ -206,6 +236,6 @@ const useStyles = createThemedStyles(colors =>
       fontSize: 13,
       lineHeight: 18,
     },
-    dismiss: { width: 52, height: 52, alignItems: 'center', justifyContent: 'center' },
+    dismiss: { width: touch.button, height: touch.button, alignItems: 'center', justifyContent: 'center' },
   }),
 );

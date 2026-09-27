@@ -40,6 +40,9 @@ const light: TColors = {
   ring: '#19472E',
 };
 
+/** Finger-sized targets: every control is at least `min`; icon-only buttons use `button`, car mode `large`. */
+export const touch = { min: 56, button: 64, large: 76 };
+
 export const fonts = {
   regular: 'DMSans_400Regular',
   medium: 'DMSans_500Medium',

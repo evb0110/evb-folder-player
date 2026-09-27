@@ -9,7 +9,7 @@ A personal, offline Android audiobook player built with Expo 57, React Native, a
 - Open straight into the current book. Choose a chapter, then switch to car mode: a large play/pause, separate ±20-second controls, optional screen wake lock, and portrait/landscape layouts. Car mode covers the player, so the chapter list keeps its place.
 - Ignore headset next/previous commands while allowing automatic progression to the next chapter.
 - Switch between light, dark, or system theme. The choice survives restarts.
-- Use touch targets of at least 48 pixels, with a 96-pixel play button and a car control that fills the screen.
+- Every control is at least 56 pixels; icon buttons are 64 (76 in car mode), with a 96-pixel play button and a car control that fills the screen.
 - Adjust speed or set a sleep timer. No account, server, advertising, or analytics.
 
 ## Development

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { createThemedStyles, fonts, useTheme } from '../theme';
+import { createThemedStyles, fonts, touch, useTheme } from '../theme';
 import { clockTime, folderChildren, parentFolder } from '../player/format';
 import { bookPlayback } from '../player/playback';
 import type { IBook, IStatus, TImportMethod } from '../player/types';
@@ -236,13 +236,13 @@ const useStyles = createThemedStyles(colors =>
     },
     searchInput: {
       flex: 1,
-      minHeight: 50,
+      minHeight: touch.min,
       fontFamily: fonts.regular,
       color: colors.text,
       fontSize: 15,
       ...(Platform.OS === 'web' ? { outlineWidth: 0 } : {}),
     },
-    breadcrumb: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 52 },
+    breadcrumb: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: touch.min },
     breadcrumbText: { flex: 1, color: colors.mint, fontFamily: fonts.medium, fontSize: 13 },
 
     row: {
@@ -275,7 +275,7 @@ const useStyles = createThemedStyles(colors =>
     emptyBackBook: { position: 'absolute', left: 24, top: 31, transform: [{ rotate: '-14deg' }] },
     emptyTitle: { fontFamily: fonts.display, fontSize: 30, lineHeight: 38, color: colors.text, marginVertical: 10 },
     fullWidth: { alignSelf: 'stretch', marginTop: 10 },
-    sample: { minHeight: 52, justifyContent: 'center', marginVertical: 8 },
+    sample: { minHeight: touch.min, justifyContent: 'center', paddingHorizontal: 20, marginVertical: 8 },
     sampleText: { color: colors.muted, fontFamily: fonts.medium, fontSize: 14 },
   }),
 );
