@@ -7,7 +7,7 @@ import type { IBook, ITrack } from '../player/types';
 import { Icon } from './Icon';
 
 /** Fixed row height lets the list open directly at a chapter without measuring every row. */
-const ROW_HEIGHT = 68;
+const ROW_HEIGHT = 76;
 /** Chapters kept visible above the current one when the list opens. */
 const CONTEXT_ROWS = 2;
 
@@ -74,7 +74,7 @@ export function ChapterList({ book, playback, onChoose }: IProps) {
               )}
             </View>
             <View style={s.info}>
-              <Text style={[s.title, played && s.playedText, current && s.currentText]} numberOfLines={detail ? 1 : 2}>
+              <Text style={[s.title, played && s.playedText, current && s.currentText]} numberOfLines={2}>
                 {item.title}
               </Text>
               {detail ? <Text style={s.detail}>{detail}</Text> : null}

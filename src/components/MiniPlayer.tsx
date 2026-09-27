@@ -3,7 +3,6 @@ import { createThemedStyles, fonts, touch } from '../theme';
 import { percent } from '../player/format';
 import type { IBook, IStatus } from '../player/types';
 import { Progress } from './Controls';
-import { BookCover } from './BookCover';
 import { PlayButton } from './Transport';
 
 interface IProps {
@@ -25,7 +24,6 @@ export function MiniPlayer({ book, status, onOpen, onToggle }: IProps) {
           style={({ pressed }) => [s.info, pressed && s.pressed]}
           onPress={onOpen}
         >
-          <BookCover title={book.name} size={36} />
           <View style={s.titles}>
             <Text style={s.title} numberOfLines={1}>
               {book.name}

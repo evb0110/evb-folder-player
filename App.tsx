@@ -209,12 +209,12 @@ const useStyles = createThemedStyles(colors =>
     app: {
       flex: 1,
       width: '100%',
-      maxWidth: 620,
       alignSelf: 'center',
       backgroundColor: colors.bg,
-      ...(Platform.OS === 'web' ? { boxShadow: '0 0 100px #00000030' } : {}),
+      // A phone uses its whole screen in either orientation; only a wide browser needs a column.
+      ...(Platform.OS === 'web' ? { maxWidth: 620, boxShadow: '0 0 100px #00000030' } : {}),
     },
-    carApp: { maxWidth: 1100 },
+    carApp: Platform.OS === 'web' ? { maxWidth: 1100 } : {},
     desktop: { justifyContent: 'center' },
     phone: {
       flexGrow: 0,

@@ -15,8 +15,9 @@ import { PlayButton, PositionSlider, SeekButton } from './Transport';
 
 export type TPlayerTab = 'listen' | 'chapters';
 
-/** Title, chapter and chapter-count lines under the cover. */
-const TITLE_BLOCK_HEIGHT = 150;
+/** Space kept around the cover: above it (below the tabs) and between it and the titles. */
+const COVER_PADDING = 16;
+const COVER_GAP = 16;
 
 const tabs = [
   { value: 'listen', label: 'Listen' },
@@ -59,7 +60,7 @@ export function PlayerScreen({ book, status, tab, onTab, onBack, onCarMode, onHi
       {tab === 'chapters' ? (
         <>
           <ChapterList book={book} playback={playback} onChoose={chooseTrack} />
-          <Dock book={book} playback={playback} controls={controls} onExpand={() => onTab('listen')} />
+          <Dock playback={playback} controls={controls} onExpand={() => onTab('listen')} />
         </>
       ) : (
         <ListenView
@@ -98,39 +99,47 @@ function ListenView({ book, status, playback, controls, command, onChapters, onH
   const s = useStyles();
   const landscape = useLandscape();
   const [menu, setMenu] = useState<'speed' | 'sleep' | null>(null);
-  const [coverSize, setCoverSize] = useState(0);
+  const [area, setArea] = useState({ width: 0, height: 0 });
+  const [titlesHeight, setTitlesHeight] = useState(0);
   const sleepLeft = sleepMinutesLeft(status.sleepAt);
 
   // The cover takes whatever height the titles and controls leave, and disappears on short screens.
-  const fitCover = (event: LayoutChangeEvent) => {
-    const { width: areaWidth, height: areaHeight } = event.nativeEvent.layout;
-    const size = Math.min(230, areaWidth * 0.6, (areaHeight - TITLE_BLOCK_HEIGHT) / 1.2);
-    setCoverSize(size >= 76 ? Math.floor(size) : 0);
-  };
+  // The cover gets exactly the height the measured titles leave, and disappears on short screens.
+  const fittedCover = Math.min(
+    240,
+    area.width * 0.62,
+    (area.height - titlesHeight - 2 * COVER_PADDING - COVER_GAP) / 1.2,
+  );
+  const coverSize = titlesHeight && fittedCover >= 76 ? Math.floor(fittedCover) : 0;
 
   const toggleMenu = (next: 'speed' | 'sleep') => setMenu(current => (current === next ? null : next));
 
   return (
     <View style={[s.listen, landscape && s.listenLandscape]}>
-      <View style={s.info} onLayout={fitCover}>
+      <View style={s.info} onLayout={(event: LayoutChangeEvent) => setArea(event.nativeEvent.layout)}>
         {coverSize ? <BookCover title={book.name} size={coverSize} large style={s.cover} /> : null}
-        <Text style={s.bookTitle} numberOfLines={2}>
-          {book.name}
-        </Text>
-        <Text style={s.chapterTitle} numberOfLines={2}>
-          {playback.track?.title}
-        </Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Show chapters"
-          onPress={onChapters}
-          style={({ pressed }) => [s.chapterLink, pressed && s.pressed]}
+        <View
+          style={s.titles}
+          onLayout={(event: LayoutChangeEvent) => setTitlesHeight(event.nativeEvent.layout.height)}
         >
-          <Text style={s.chapterCount}>
-            Chapter {playback.trackIndex + 1} of {book.tracks.length}
+          <Text style={s.bookTitle} numberOfLines={2}>
+            {book.name}
           </Text>
-          <Icon name="next" size={14} color={colors.subtle} />
-        </Pressable>
+          <Text style={s.chapterTitle} numberOfLines={2}>
+            {playback.track?.title}
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Show chapters"
+            onPress={onChapters}
+            style={({ pressed }) => [s.chapterLink, pressed && s.pressed]}
+          >
+            <Text style={s.chapterCount}>
+              Chapter {playback.trackIndex + 1} of {book.tracks.length}
+            </Text>
+            <Icon name="next" size={14} color={colors.subtle} />
+          </Pressable>
+        </View>
       </View>
 
       <View style={[s.controls, landscape && s.controlsLandscape]}>
@@ -240,14 +249,13 @@ function Tool({ label, accessibilityLabel, icon, text, active, disabled, onPress
 }
 
 interface IDockProps {
-  book: IBook;
   playback: IBookPlayback;
   controls: ITransportActions;
   onExpand: () => void;
 }
 
 /** Compact controls under the chapter list, so the list keeps most of the screen. */
-function Dock({ book, playback, controls, onExpand }: IDockProps) {
+function Dock({ playback, controls, onExpand }: IDockProps) {
   const s = useStyles();
   const time = `${clockTime(playback.position)}${playback.duration ? ` / ${clockTime(playback.duration)}` : ''}`;
   return (
@@ -260,7 +268,6 @@ function Dock({ book, playback, controls, onExpand }: IDockProps) {
           onPress={onExpand}
           style={({ pressed }) => [s.dockInfo, pressed && s.pressed]}
         >
-          <BookCover title={book.name} size={36} />
           <View style={s.dockTitles}>
             <Text style={s.dockTitle} numberOfLines={1}>
               {playback.track?.title}
@@ -290,8 +297,15 @@ const useStyles = createThemedStyles(colors =>
 
     listen: { flex: 1 },
     listenLandscape: { flexDirection: 'row', alignItems: 'center' },
-    info: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 28 },
-    cover: { marginBottom: 18 },
+    info: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 28,
+      paddingVertical: COVER_PADDING,
+    },
+    titles: { alignSelf: 'stretch', alignItems: 'center' },
+    cover: { marginBottom: COVER_GAP },
     bookTitle: {
       alignSelf: 'stretch',
       fontFamily: fonts.display,
