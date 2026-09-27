@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Folder Player",
+    "slug": "folder-player",
+    "version": "0.1.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#101918",
+    "android": {
+      "package": "com.evb.folderplayer",
+      "versionCode": 1,
+      "permissions": [
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+        "WAKE_LOCK",
+        "READ_MEDIA_AUDIO",
+        "READ_EXTERNAL_STORAGE"
+      ],
+      "blockedPermissions": [
+        "RECORD_AUDIO",
+        "WRITE_EXTERNAL_STORAGE",
+        "SYSTEM_ALERT_WINDOW"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundColor": "#101918"
+      }
+    },
+    "plugins": [
+      "./plugins/withFolderPlayer",
+      "expo-asset",
+      "expo-font",
+      ["expo-splash-screen", { "backgroundColor": "#101918", "image": "./assets/icon.png", "imageWidth": 140 }]
+    ],
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    }
+  }
+}

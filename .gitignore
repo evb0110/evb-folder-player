@@ -1,0 +1,12 @@
+node_modules/
+.expo/
+.devkit/
+.credentials/
+/android/
+/ios/
+**/build/
+**/.gradle/
+**/.cxx/
+dist/
+*.tsbuildinfo
+.DS_Store
