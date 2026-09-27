@@ -6,19 +6,21 @@ A personal, offline Android audiobook player built with Expo 57, React Native, a
 - Browse folders or books with natural filename ordering. Files are never moved, renamed, or deleted.
 - Keep independent listening positions for each folder. Resume the current book from the library or headphones.
 - Save durable progress every five seconds during playback and immediately on pause. Retain 400 history entries, checkpoints before jumps, bookmarks, and undo.
-- Use a dedicated car mode with large play/pause, separate ±20-second controls, optional screen wake lock, and portrait/landscape layouts.
+- Open straight into the current book. Choose a chapter, then switch to car mode: a large play/pause, separate ±20-second controls, optional screen wake lock, and portrait/landscape layouts. Car mode covers the player, so the chapter list keeps its place.
 - Ignore headset next/previous commands while allowing automatic progression to the next chapter.
 - Switch between light, dark, or system theme. The choice survives restarts.
-- Use touch targets of at least 52 pixels, with a 100-pixel play button and a larger car control.
+- Use touch targets of at least 48 pixels, with a 96-pixel play button and a car control that fills the screen.
 - Adjust speed or set a sleep timer. No account, server, advertising, or analytics.
 
 ## Development
 
 ```sh
 npm ci
-npm run web
-npm run typecheck
-npm test
+npm run web          # dev server
+npm run check        # typecheck, ESLint, Prettier, unit tests
+npm run format       # apply Prettier and ESLint fixes
+npm run export:web   # static web preview in dist/web
+npm run preview:web  # serve dist/web on 127.0.0.1:8098 (PORT overrides)
 ```
 
 The web build is a UI preview with a real, bundled spoken sample. Device-folder access and native background playback require the Android app. Expo Go cannot load the custom Kotlin module.
@@ -31,12 +33,12 @@ Install JDK 21 and Android SDK 36. Set `FOLDER_PLAYER_JAVA_HOME` and `ANDROID_HO
 npm run build:android
 ```
 
-The script uses Expo prebuild, builds an ARM64 release with bundled JavaScript, and writes `.devkit/artifacts/folder-player-0.1.0.apk` and a SHA-256 receipt. No Metro server or Expo account is required to run the APK.
+The script uses Expo prebuild, builds an ARM64 release with bundled JavaScript, and writes `dist/android/folder-player-<version>.apk` and a SHA-256 receipt. No Metro server or Expo account is required to run the APK.
 
 The initial build generates a private signing key in ignored `.credentials/`. Keep this directory backed up securely. Updates must use the same application ID and signing key to retain installed data. Do not uninstall to upgrade:
 
 ```sh
-adb -s DEVICE_SERIAL install -r .devkit/artifacts/folder-player-0.1.0.apk
+adb -s DEVICE_SERIAL install -r dist/android/folder-player-0.1.0.apk
 ```
 
 The app's package is `com.evb.folderplayer`, separate from Music Folder Player.

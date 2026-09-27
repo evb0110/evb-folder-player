@@ -17,11 +17,7 @@
         "READ_MEDIA_AUDIO",
         "READ_EXTERNAL_STORAGE"
       ],
-      "blockedPermissions": [
-        "RECORD_AUDIO",
-        "WRITE_EXTERNAL_STORAGE",
-        "SYSTEM_ALERT_WINDOW"
-      ],
+      "blockedPermissions": ["RECORD_AUDIO", "WRITE_EXTERNAL_STORAGE", "SYSTEM_ALERT_WINDOW"],
       "adaptiveIcon": {
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundColor": "#101918"

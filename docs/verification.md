@@ -1,6 +1,6 @@
 # Verification, 27 September 2026
 
-The release is an ARM64 standalone APK for Android 7 or newer, built with Expo 57 and signed with the private project key. The emulator ran Android 16/API 36. The final APK, checksum, and detailed local receipts are retained under `.devkit/artifacts/` and `.devkit/evidence/`.
+The release is an ARM64 standalone APK for Android 7 or newer, built with Expo 57 and signed with the private project key. The emulator ran Android 16/API 36. Detailed local receipts are retained under `.devkit/evidence/`. Release builds now go to `dist/android/`.
 
 ## Automated checks
 

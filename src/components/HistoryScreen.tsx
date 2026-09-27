@@ -1,21 +1,128 @@
 import { useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
-import { createThemedStyles, useTheme, fonts } from '../theme';
-import type { IHistoryEntry } from '../player/types';
+import { createThemedStyles, fonts, useTheme } from '../theme';
 import { clockTime, historyDate } from '../player/format';
-import { Action, Pill } from './Controls';
-import { Icon } from './Icon';
-export function HistoryScreen({ history, canUndo, onUndo, onRestore }: { history: IHistoryEntry[]; canUndo: boolean; onUndo: () => void; onRestore: (entry: IHistoryEntry) => void }) { const { colors } = useTheme(); const s = useStyles();
-  const [bookmarks, setBookmarks] = useState(false);
-  const rows = bookmarks ? history.filter(item => item.reason === 'Bookmark') : history;
-  return <View style={s.screen}>
-    <Text style={s.heading}>History</Text>
-    {canUndo ? <Action icon="undo" label="Undo last jump" tone="primary" onPress={onUndo} style={{ marginTop: 20 }} /> : null}
-    <View style={s.filters}><Pill label="All activity" selected={!bookmarks} onPress={() => setBookmarks(false)} /><Pill label="Bookmarks" selected={bookmarks} onPress={() => setBookmarks(true)} /></View>
-    <FlatList data={rows} keyExtractor={item => String(item.id)} contentContainerStyle={s.list} ListEmptyComponent={<View style={s.empty}><View style={s.emptyIcon}><Icon name={bookmarks ? 'bookmark' : 'history'} size={38} color={colors.gold} /></View><Text style={s.emptyTitle}>{bookmarks ? 'No bookmarks' : 'No history'}</Text></View>} renderItem={({ item }) => <Pressable accessibilityRole="button" accessibilityLabel={`Restore ${item.trackTitle} at ${clockTime(item.position)}`} style={s.entry} onPress={() => onRestore(item)}>
-      <View style={s.entryTop}><View style={s.reason}><Icon name={item.reason === 'Bookmark' ? 'bookmark' : item.reason.startsWith('Before') ? 'undo' : 'history'} size={15} color={item.reason === 'Bookmark' ? colors.gold : colors.subtle} /><Text style={s.reasonText}>{item.reason}</Text></View><Text style={s.date}>{historyDate(item.time)}</Text></View>
-      <Text style={s.book} numberOfLines={1}>{item.bookName}</Text><Text style={s.track} numberOfLines={1}>{item.trackTitle}</Text><View style={s.entryBottom}><Text style={s.position}>{clockTime(item.position)}<Text style={s.chapter}>  ·  Chapter {item.trackIndex + 1}</Text></Text><View style={s.restore}><Text style={s.restoreText}>Restore</Text><Icon name="back" size={13} color={colors.mint} /></View></View>
-    </Pressable>} />
-  </View>;
+import type { IHistoryEntry } from '../player/types';
+import { Action, IconButton, Segmented } from './Controls';
+import { Icon, type TIcon } from './Icon';
+
+type TFilter = 'all' | 'bookmarks';
+
+const filters = [
+  { value: 'all', label: 'All' },
+  { value: 'bookmarks', label: 'Bookmarks' },
+] as const;
+
+function reasonIcon(reason: string): TIcon {
+  if (reason === 'Bookmark') return 'bookmark';
+  if (reason.startsWith('Before')) return 'undo';
+  return 'history';
 }
-const useStyles = createThemedStyles(colors => StyleSheet.create({ screen: { flex: 1, paddingHorizontal: 24, paddingTop: 27 }, heading: { fontFamily: fonts.display, fontSize: 32, color: colors.text }, filters: { flexDirection: 'row', alignSelf: 'flex-start', backgroundColor: colors.surface, borderRadius: 28, padding: 3, marginTop: 25, marginBottom: 12 }, list: { paddingBottom: 25 }, entry: { paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: colors.line }, entryTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, gap: 10 }, reason: { flexDirection: 'row', alignItems: 'center', gap: 7, flexShrink: 1 }, reasonText: { fontFamily: fonts.medium, color: colors.subtle, fontSize: 10 }, date: { fontFamily: fonts.regular, color: colors.subtle, fontSize: 10 }, book: { fontFamily: fonts.medium, fontSize: 16, color: colors.text, marginBottom: 4 }, track: { fontFamily: fonts.regular, color: colors.muted, fontSize: 12 }, entryBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 }, position: { fontFamily: fonts.bold, fontSize: 14, color: colors.mint }, chapter: { fontFamily: fonts.regular, color: colors.subtle, fontSize: 11 }, restore: { flexDirection: 'row', alignItems: 'center', gap: 8 }, restoreText: { color: colors.mint, fontFamily: fonts.medium, fontSize: 11 }, empty: { alignItems: 'center', paddingTop: 65 }, emptyIcon: { width: 92, height: 92, backgroundColor: colors.surface, borderRadius: 46, alignItems: 'center', justifyContent: 'center', marginBottom: 23 }, emptyTitle: { color: colors.text, fontFamily: fonts.display, fontSize: 22 } }));
+
+interface IProps {
+  history: IHistoryEntry[];
+  canUndo: boolean;
+  onBack: () => void;
+  onUndo: () => void;
+  onRestore: (entry: IHistoryEntry) => void;
+}
+
+export function HistoryScreen({ history, canUndo, onBack, onUndo, onRestore }: IProps) {
+  const { colors } = useTheme();
+  const s = useStyles();
+  const [filter, setFilter] = useState<TFilter>('all');
+  const rows = filter === 'bookmarks' ? history.filter(item => item.reason === 'Bookmark') : history;
+
+  return (
+    <View style={s.screen}>
+      <View style={s.header}>
+        <IconButton name="back" label="Back" onPress={onBack} />
+        <Text style={s.heading}>History</Text>
+      </View>
+      <View style={s.toolbar}>
+        <Segmented options={filters} value={filter} onChange={setFilter} />
+        {canUndo ? <Action icon="undo" label="Undo" compact tone="quiet" onPress={onUndo} /> : null}
+      </View>
+      <FlatList
+        data={rows}
+        keyExtractor={item => String(item.id)}
+        contentContainerStyle={s.list}
+        ListEmptyComponent={
+          <View style={s.empty}>
+            <View style={s.emptyIcon}>
+              <Icon name={filter === 'bookmarks' ? 'bookmark' : 'history'} size={38} color={colors.gold} />
+            </View>
+            <Text style={s.emptyTitle}>{filter === 'bookmarks' ? 'No bookmarks' : 'No history'}</Text>
+          </View>
+        }
+        renderItem={({ item }) => {
+          const bookmark = item.reason === 'Bookmark';
+          return (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Restore ${item.trackTitle} at ${clockTime(item.position)}`}
+              style={({ pressed }) => [s.entry, pressed && s.pressed]}
+              onPress={() => onRestore(item)}
+            >
+              <Icon name={reasonIcon(item.reason)} size={18} color={bookmark ? colors.gold : colors.subtle} />
+              <View style={s.entryInfo}>
+                <Text style={s.book} numberOfLines={1}>
+                  {item.bookName}
+                </Text>
+                <Text style={s.track} numberOfLines={1}>
+                  {item.trackTitle}
+                </Text>
+                <Text style={s.meta} numberOfLines={1}>
+                  {item.reason} · {historyDate(item.time)}
+                </Text>
+              </View>
+              <Text style={s.position}>{clockTime(item.position)}</Text>
+            </Pressable>
+          );
+        }}
+      />
+    </View>
+  );
+}
+
+const useStyles = createThemedStyles(colors =>
+  StyleSheet.create({
+    screen: { flex: 1 },
+    pressed: { opacity: 0.7 },
+    header: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingTop: 6 },
+    heading: { fontFamily: fonts.display, fontSize: 28, color: colors.text },
+    toolbar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+    },
+    list: { paddingHorizontal: 20, paddingBottom: 24 },
+    entry: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 14,
+      minHeight: 76,
+      paddingVertical: 12,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.line,
+    },
+    entryInfo: { flex: 1, gap: 3 },
+    book: { fontFamily: fonts.medium, fontSize: 15, color: colors.text },
+    track: { fontFamily: fonts.regular, color: colors.muted, fontSize: 13 },
+    meta: { fontFamily: fonts.regular, color: colors.subtle, fontSize: 11 },
+    position: { fontFamily: fonts.bold, fontSize: 14, color: colors.mint, fontVariant: ['tabular-nums'] },
+    empty: { alignItems: 'center', paddingTop: 64 },
+    emptyIcon: {
+      width: 92,
+      height: 92,
+      borderRadius: 46,
+      backgroundColor: colors.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 20,
+    },
+    emptyTitle: { color: colors.text, fontFamily: fonts.display, fontSize: 22 },
+  }),
+);

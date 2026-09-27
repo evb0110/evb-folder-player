@@ -1,0 +1,6 @@
+android/
+ios/
+dist/
+modules/**/build/
+package-lock.json
+*.md
