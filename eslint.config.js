@@ -5,5 +5,5 @@ const prettierConfig = require('eslint-config-prettier');
 module.exports = defineConfig([
   expoConfig,
   prettierConfig,
-  { ignores: ['android/*', 'ios/*', 'dist/*', 'modules/**/build/*'] },
+  { ignores: ['.devkit/*', 'android/*', 'ios/*', 'dist/*', 'modules/**/build/*'] },
 ]);
