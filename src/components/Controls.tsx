@@ -44,11 +44,9 @@ interface IIconButtonProps {
   onPress: () => void;
   active?: boolean;
   disabled?: boolean;
-  /** Car mode uses larger targets. */
-  large?: boolean;
 }
 
-export function IconButton({ name, label, onPress, active, disabled, large }: IIconButtonProps) {
+export function IconButton({ name, label, onPress, active, disabled }: IIconButtonProps) {
   const { colors } = useTheme();
   const s = useStyles();
   return (
@@ -60,13 +58,12 @@ export function IconButton({ name, label, onPress, active, disabled, large }: II
       accessibilityState={{ selected: active, disabled }}
       style={({ pressed }) => [
         s.iconButton,
-        large && s.iconButtonLarge,
         active && s.iconButtonActive,
         pressed && s.pressed,
         disabled && s.disabled,
       ]}
     >
-      <Icon name={name} size={large ? 36 : 30} color={active ? colors.mint : colors.text} />
+      <Icon name={name} size={30} color={active ? colors.mint : colors.text} />
     </Pressable>
   );
 }
@@ -143,7 +140,6 @@ const useStyles = createThemedStyles(colors =>
       justifyContent: 'center',
       borderRadius: touch.button / 2,
     },
-    iconButtonLarge: { width: touch.large, height: touch.large, borderRadius: touch.large / 2 },
     iconButtonActive: { backgroundColor: colors.surface },
     segmented: { flexDirection: 'row', backgroundColor: colors.surface, borderRadius: touch.min / 2 + 3, padding: 3 },
     segment: {

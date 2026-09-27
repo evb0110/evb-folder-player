@@ -4,6 +4,7 @@ import { createThemedStyles, fonts, useTheme } from '../theme';
 import { clockTime, historyDate } from '../player/format';
 import type { IHistoryEntry } from '../player/types';
 import { Action, IconButton, Segmented } from './Controls';
+import { Header } from './Header';
 import { Icon, type TIcon } from './Icon';
 
 type TFilter = 'all' | 'bookmarks';
@@ -35,10 +36,7 @@ export function HistoryScreen({ history, canUndo, onBack, onUndo, onRestore }: I
 
   return (
     <View style={s.screen}>
-      <View style={s.header}>
-        <IconButton name="back" label="Back" onPress={onBack} />
-        <Text style={s.heading}>History</Text>
-      </View>
+      <Header left={<IconButton name="back" label="Back" onPress={onBack} />} title="History" />
       <View style={s.toolbar}>
         <Segmented options={filters} value={filter} onChange={setFilter} />
         {canUndo ? <Action icon="undo" label="Undo" compact tone="quiet" onPress={onUndo} /> : null}
@@ -89,14 +87,13 @@ const useStyles = createThemedStyles(colors =>
   StyleSheet.create({
     screen: { flex: 1 },
     pressed: { opacity: 0.7 },
-    header: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingTop: 6 },
-    heading: { fontFamily: fonts.display, fontSize: 28, color: colors.text },
     toolbar: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: 20,
-      paddingVertical: 10,
+      paddingTop: 8,
+      paddingBottom: 10,
     },
     list: { paddingHorizontal: 20, paddingBottom: 24 },
     entry: {
@@ -108,10 +105,10 @@ const useStyles = createThemedStyles(colors =>
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.line,
     },
-    entryInfo: { flex: 1, gap: 3 },
-    book: { fontFamily: fonts.medium, fontSize: 15, color: colors.text },
-    track: { fontFamily: fonts.regular, color: colors.muted, fontSize: 13 },
-    meta: { fontFamily: fonts.regular, color: colors.subtle, fontSize: 11 },
+    entryInfo: { flex: 1, gap: 2 },
+    book: { fontFamily: fonts.medium, fontSize: 16, lineHeight: 22, color: colors.text },
+    track: { fontFamily: fonts.regular, color: colors.muted, fontSize: 12, lineHeight: 17 },
+    meta: { fontFamily: fonts.regular, color: colors.subtle, fontSize: 12, lineHeight: 17 },
     position: { fontFamily: fonts.bold, fontSize: 14, color: colors.mint, fontVariant: ['tabular-nums'] },
     empty: { alignItems: 'center', paddingTop: 64 },
     emptyIcon: {

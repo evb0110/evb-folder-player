@@ -7,6 +7,7 @@ import type { IBook, IStatus, TImportMethod } from '../player/types';
 import { Action, IconButton, Segmented } from './Controls';
 import { BookCover } from './BookCover';
 import { Icon } from './Icon';
+import { Header } from './Header';
 import { ThemePicker } from './ThemePicker';
 
 type TMode = 'books' | 'folders';
@@ -42,102 +43,110 @@ export function LibraryScreen({ books, status, busy, onImport, onBook, onHistory
   const togglePanel = (next: 'add' | 'theme') => setPanel(current => (current === next ? null : next));
 
   return (
-    <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
-      <View style={s.header}>
-        <Text style={s.heading}>Library</Text>
-        <View style={s.headerActions}>
-          <IconButton name="history" label="History" onPress={onHistory} />
-          <IconButton name="sun" label="Theme" active={panel === 'theme'} onPress={() => togglePanel('theme')} />
-          <IconButton name="plus" label="Add audiobooks" active={panel === 'add'} onPress={() => togglePanel('add')} />
-        </View>
-      </View>
-
-      {panel === 'theme' ? <ThemePicker /> : null}
-      {panel === 'add' ? (
-        <View style={s.addPanel}>
-          <Action
-            icon="folder"
-            label="Choose a folder"
-            tone="primary"
-            disabled={busy}
-            onPress={() => onImport('folder')}
-          />
-          <Action icon="search" label="Scan device audio" disabled={busy} onPress={() => onImport('device')} />
-        </View>
-      ) : null}
-      {busy ? (
-        <View style={s.busy}>
-          <ActivityIndicator color={colors.mint} />
-          <Text style={s.busyText}>Reading folders…</Text>
-        </View>
-      ) : null}
-
-      {books.length === 0 ? (
-        <EmptyLibrary busy={busy} onImport={onImport} />
-      ) : (
-        <>
-          <View style={s.filters}>
-            <Segmented options={modes} value={mode} onChange={setMode} />
-            <IconButton name="refresh" label="Rescan folders" disabled={busy} onPress={() => onImport('rescan')} />
-          </View>
-          <View style={s.search}>
-            <Icon name="search" color={colors.subtle} size={19} />
-            <TextInput
-              value={query}
-              onChangeText={setQuery}
-              placeholder={`Search ${books.length} ${books.length === 1 ? 'book' : 'books'}`}
-              placeholderTextColor={colors.subtle}
-              style={s.searchInput}
-              accessibilityLabel="Search library"
-              clearButtonMode="while-editing"
+    <View style={s.screen}>
+      <Header
+        title="Library"
+        right={
+          <>
+            <IconButton name="history" label="History" onPress={onHistory} />
+            <IconButton name="sun" label="Theme" active={panel === 'theme'} onPress={() => togglePanel('theme')} />
+            <IconButton
+              name="plus"
+              label="Add audiobooks"
+              active={panel === 'add'}
+              onPress={() => togglePanel('add')}
             />
+          </>
+        }
+      />
+      <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+        {panel === 'theme' ? <ThemePicker /> : null}
+        {panel === 'add' ? (
+          <View style={s.addPanel}>
+            <Action
+              icon="folder"
+              label="Choose a folder"
+              tone="primary"
+              disabled={busy}
+              onPress={() => onImport('folder')}
+            />
+            <Action icon="search" label="Scan device audio" disabled={busy} onPress={() => onImport('device')} />
           </View>
+        ) : null}
+        {busy ? (
+          <View style={s.busy}>
+            <ActivityIndicator color={colors.mint} />
+            <Text style={s.busyText}>Reading folders…</Text>
+          </View>
+        ) : null}
 
-          {browsing && path ? (
-            <Pressable
-              style={s.breadcrumb}
-              onPress={() => setPath(parentFolder(path))}
-              accessibilityRole="button"
-              accessibilityLabel="Parent folder"
-            >
-              <Icon name="back" size={16} color={colors.mint} />
-              <Text style={s.breadcrumbText} numberOfLines={2}>
-                {path}
-              </Text>
-            </Pressable>
-          ) : null}
-          {browsing
-            ? folder.folders.map(child => (
-                <Pressable
-                  key={child}
-                  style={({ pressed }) => [s.row, pressed && s.pressed]}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Open folder ${child}`}
-                  onPress={() => setPath(child)}
-                >
-                  <View style={s.folderIcon}>
-                    <Icon name="folder" color={colors.gold} />
-                  </View>
-                  <Text style={s.folderName}>{child.split('/').pop()}</Text>
-                  <Icon name="next" color={colors.subtle} size={18} />
-                </Pressable>
-              ))
-            : null}
-          {rows.map(book => (
-            <BookRow key={book.id} book={book} status={status} onPress={() => onBook(book)} />
-          ))}
-          {filtered.length === 0 ? <Text style={s.noResults}>No books match “{query}”.</Text> : null}
-          <Action
-            icon="plus"
-            label="Add folder"
-            tone="quiet"
-            disabled={busy}
-            onPress={() => onImport('folder')}
-            style={s.addMore}
-          />
-        </>
-      )}
-    </ScrollView>
+        {books.length === 0 ? (
+          <EmptyLibrary busy={busy} onImport={onImport} />
+        ) : (
+          <>
+            <View style={s.filters}>
+              <Segmented options={modes} value={mode} onChange={setMode} />
+              <IconButton name="refresh" label="Rescan folders" disabled={busy} onPress={() => onImport('rescan')} />
+            </View>
+            <View style={s.search}>
+              <Icon name="search" color={colors.subtle} size={19} />
+              <TextInput
+                value={query}
+                onChangeText={setQuery}
+                placeholder={`Search ${books.length} ${books.length === 1 ? 'book' : 'books'}`}
+                placeholderTextColor={colors.subtle}
+                style={s.searchInput}
+                accessibilityLabel="Search library"
+                clearButtonMode="while-editing"
+              />
+            </View>
+
+            {browsing && path ? (
+              <Pressable
+                style={s.breadcrumb}
+                onPress={() => setPath(parentFolder(path))}
+                accessibilityRole="button"
+                accessibilityLabel="Parent folder"
+              >
+                <Icon name="back" size={16} color={colors.mint} />
+                <Text style={s.breadcrumbText} numberOfLines={2}>
+                  {path}
+                </Text>
+              </Pressable>
+            ) : null}
+            {browsing
+              ? folder.folders.map(child => (
+                  <Pressable
+                    key={child}
+                    style={({ pressed }) => [s.row, pressed && s.pressed]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Open folder ${child}`}
+                    onPress={() => setPath(child)}
+                  >
+                    <View style={s.folderIcon}>
+                      <Icon name="folder" color={colors.gold} />
+                    </View>
+                    <Text style={s.folderName}>{child.split('/').pop()}</Text>
+                    <Icon name="next" color={colors.subtle} size={18} />
+                  </Pressable>
+                ))
+              : null}
+            {rows.map(book => (
+              <BookRow key={book.id} book={book} status={status} onPress={() => onBook(book)} />
+            ))}
+            {filtered.length === 0 ? <Text style={s.noResults}>No books match “{query}”.</Text> : null}
+            <Action
+              icon="plus"
+              label="Add folder"
+              tone="quiet"
+              disabled={busy}
+              onPress={() => onImport('folder')}
+              style={s.addMore}
+            />
+          </>
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
@@ -213,17 +222,15 @@ function EmptyLibrary({ busy, onImport }: { busy: boolean; onImport: (method: TI
 
 const useStyles = createThemedStyles(colors =>
   StyleSheet.create({
-    content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 28 },
+    content: { paddingHorizontal: 20, paddingBottom: 28 },
     pressed: { opacity: 0.7 },
-    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    headerActions: { flexDirection: 'row', gap: 2 },
-    heading: { fontSize: 30, fontFamily: fonts.display, color: colors.text },
-    addPanel: { backgroundColor: colors.surface, borderRadius: 20, padding: 14, marginTop: 14, gap: 10 },
+    screen: { flex: 1 },
+    addPanel: { backgroundColor: colors.surface, borderRadius: 20, padding: 14, marginTop: 8, gap: 10 },
     busy: { flexDirection: 'row', gap: 12, paddingVertical: 18, alignItems: 'center' },
     busyText: { color: colors.muted, fontFamily: fonts.regular, fontSize: 14 },
     note: { color: colors.subtle, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
 
-    filters: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 },
+    filters: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
     search: {
       flexDirection: 'row',
       alignItems: 'center',

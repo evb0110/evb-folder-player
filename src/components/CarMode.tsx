@@ -7,6 +7,7 @@ import { bookPlayback } from '../player/playback';
 import type { TRunCommand } from '../player/usePlayer';
 import type { IBook, IStatus } from '../player/types';
 import { IconButton } from './Controls';
+import { Header } from './Header';
 import { PlayButton, PositionSlider, SeekButton } from './Transport';
 
 /** Width reserved on each side of the play button for the landscape jump buttons. */
@@ -45,20 +46,21 @@ export function CarMode({ book, status, keepAwake, onKeepAwake, onExit, onUndo, 
   return (
     <View style={s.screen}>
       {keepAwake ? <KeepAwake /> : null}
-      <View style={s.header}>
-        <IconButton name="close" label="Exit car mode" large onPress={onExit} />
-        <View style={s.headerActions}>
-          {/* Shown only after a jump that can be reverted; a disabled icon alone reads as broken. */}
-          {status.canUndo ? <IconButton name="undo" label="Undo last jump" large onPress={onUndo} /> : null}
-          <IconButton
-            large
-            name="sun"
-            label={keepAwake ? 'Screen stays on' : 'Screen can sleep'}
-            active={keepAwake}
-            onPress={() => onKeepAwake(!keepAwake)}
-          />
-        </View>
-      </View>
+      <Header
+        left={<IconButton name="close" label="Exit car mode" onPress={onExit} />}
+        right={
+          <>
+            {/* Shown only after a jump that can be reverted; a disabled icon alone reads as broken. */}
+            {status.canUndo ? <IconButton name="undo" label="Undo last jump" onPress={onUndo} /> : null}
+            <IconButton
+              name="sun"
+              label={keepAwake ? 'Screen stays on' : 'Screen can sleep'}
+              active={keepAwake}
+              onPress={() => onKeepAwake(!keepAwake)}
+            />
+          </>
+        }
+      />
       <View style={[s.body, landscape && s.bodyLandscape]}>
         <View style={[s.info, landscape && s.infoLandscape]}>
           <Text style={s.book} numberOfLines={2}>
@@ -100,12 +102,9 @@ const useStyles = createThemedStyles(colors =>
       bottom: 0,
       left: 0,
       backgroundColor: colors.bg,
-      paddingHorizontal: 16,
       paddingBottom: 16,
     },
-    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 6 },
-    headerActions: { flexDirection: 'row', gap: 6 },
-    body: { flex: 1 },
+    body: { flex: 1, paddingHorizontal: 16 },
     bodyLandscape: { flexDirection: 'row', alignItems: 'center', gap: 16 },
     info: { alignItems: 'center', paddingHorizontal: 8, paddingBottom: 8 },
     infoLandscape: { width: '32%' },
@@ -129,6 +128,6 @@ const useStyles = createThemedStyles(colors =>
     position: { alignSelf: 'stretch', marginTop: 8 },
     controls: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     controlsLandscape: { flexDirection: 'row', alignSelf: 'stretch', gap: 8 },
-    seekRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
+    seekRow: { flexDirection: 'row', gap: 12, marginTop: 8, paddingHorizontal: 16 },
   }),
 );

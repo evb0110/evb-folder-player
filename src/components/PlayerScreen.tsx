@@ -9,6 +9,7 @@ import type { IBook, IStatus, ITrack } from '../player/types';
 import { IconButton, Progress, Segmented } from './Controls';
 import { BookCover } from './BookCover';
 import { ChapterList } from './ChapterList';
+import { Header } from './Header';
 import { Icon, type TIcon } from './Icon';
 import { PlayButton, PositionSlider, SeekButton } from './Transport';
 
@@ -50,15 +51,15 @@ export function PlayerScreen({ book, status, tab, onTab, onBack, onCarMode, onHi
 
   return (
     <View style={s.screen}>
-      <View style={s.topBar}>
-        <IconButton name="back" label="Library" onPress={onBack} />
-        <Segmented options={tabs} value={tab} onChange={onTab} />
-        <IconButton name="car" label="Car mode" onPress={onCarMode} />
-      </View>
+      <Header
+        left={<IconButton name="back" label="Library" onPress={onBack} />}
+        center={<Segmented options={tabs} value={tab} onChange={onTab} />}
+        right={<IconButton name="car" label="Car mode" onPress={onCarMode} />}
+      />
       {tab === 'chapters' ? (
         <>
           <ChapterList book={book} playback={playback} onChoose={chooseTrack} />
-          <Dock playback={playback} controls={controls} onExpand={() => onTab('listen')} />
+          <Dock book={book} playback={playback} controls={controls} onExpand={() => onTab('listen')} />
         </>
       ) : (
         <ListenView
@@ -239,13 +240,14 @@ function Tool({ label, accessibilityLabel, icon, text, active, disabled, onPress
 }
 
 interface IDockProps {
+  book: IBook;
   playback: IBookPlayback;
   controls: ITransportActions;
   onExpand: () => void;
 }
 
 /** Compact controls under the chapter list, so the list keeps most of the screen. */
-function Dock({ playback, controls, onExpand }: IDockProps) {
+function Dock({ book, playback, controls, onExpand }: IDockProps) {
   const s = useStyles();
   const time = `${clockTime(playback.position)}${playback.duration ? ` / ${clockTime(playback.duration)}` : ''}`;
   return (
@@ -258,19 +260,23 @@ function Dock({ playback, controls, onExpand }: IDockProps) {
           onPress={onExpand}
           style={({ pressed }) => [s.dockInfo, pressed && s.pressed]}
         >
-          <Text style={s.dockTitle} numberOfLines={1}>
-            {playback.track?.title}
-          </Text>
-          <Text style={s.dockTime}>{time}</Text>
+          <BookCover title={book.name} size={36} />
+          <View style={s.dockTitles}>
+            <Text style={s.dockTitle} numberOfLines={1}>
+              {playback.track?.title}
+            </Text>
+            <Text style={s.dockTime}>{time}</Text>
+          </View>
         </Pressable>
+        {/* Play sits at the right edge, where the mini player has it on other screens. */}
         <SeekButton forward={false} size="compact" disabled={!playback.active} onSkip={controls.skip} />
+        <SeekButton forward size="compact" disabled={!playback.active} onSkip={controls.skip} />
         <PlayButton
           playing={playback.playing}
           loading={playback.loading}
           size={touch.button}
           onPress={controls.toggle}
         />
-        <SeekButton forward size="compact" disabled={!playback.active} onSkip={controls.skip} />
       </View>
     </View>
   );
@@ -281,13 +287,6 @@ const useStyles = createThemedStyles(colors =>
     screen: { flex: 1 },
     pressed: { opacity: 0.7 },
     disabled: { opacity: 0.35 },
-    topBar: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 4,
-      paddingVertical: 4,
-    },
 
     listen: { flex: 1 },
     listenLandscape: { flexDirection: 'row', alignItems: 'center' },
@@ -322,10 +321,11 @@ const useStyles = createThemedStyles(colors =>
     toolText: { fontFamily: fonts.bold, fontSize: 17, lineHeight: 22 },
     toolLabel: { color: colors.subtle, fontFamily: fonts.medium, fontSize: 11.5 },
 
-    dock: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.line, backgroundColor: colors.bg },
+    dock: { backgroundColor: colors.elevated },
     dockProgress: { height: 2, borderRadius: 0 },
-    dockRow: { flexDirection: 'row', alignItems: 'center', paddingLeft: 20, paddingRight: 10, paddingVertical: 8 },
-    dockInfo: { flex: 1, minHeight: touch.min, justifyContent: 'center', gap: 3, paddingRight: 6 },
+    dockRow: { flexDirection: 'row', alignItems: 'center', paddingLeft: 20, paddingRight: 12, paddingVertical: 8 },
+    dockInfo: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: touch.min },
+    dockTitles: { flex: 1, gap: 3 },
     dockTitle: { fontFamily: fonts.medium, color: colors.text, fontSize: 14 },
     dockTime: { fontFamily: fonts.regular, color: colors.subtle, fontSize: 12, fontVariant: ['tabular-nums'] },
   }),

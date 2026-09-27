@@ -42,7 +42,7 @@ export function ThemePicker() {
 
 const useStyles = createThemedStyles(colors =>
   StyleSheet.create({
-    panel: { marginTop: 14, gap: 10 },
+    panel: { marginTop: 8, gap: 10 },
     choices: { flexDirection: 'row', gap: 8 },
     choice: {
       flex: 1,
