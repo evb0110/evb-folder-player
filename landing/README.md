@@ -13,6 +13,7 @@ The download panel reads the latest GitHub release through `server/api/release.g
 
 Create the project from `evb0110/evb-folder-player` with:
 
+- Production branch: **master** (after the parent integrates the landing commit).
 - Framework preset: **Nuxt.js**.
 - Root directory: **landing**.
 - Install command: **pnpm install --frozen-lockfile**.

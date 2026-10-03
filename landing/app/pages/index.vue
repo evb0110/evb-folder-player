@@ -91,7 +91,7 @@
             The Android app has no network permission. No accounts, ads, analytics or tracking. Your library, bookmarks
             and listening history stay on your device. Your audio files are never modified, moved, renamed or deleted.
           </p>
-          <a :href="`${REPOSITORY_URL}/blob/main/PRIVACY.md`"
+          <a :href="`${REPOSITORY_URL}/blob/master/PRIVACY.md`"
             >Read the privacy policy <span aria-hidden="true">↗</span></a
           >
         </div>
@@ -159,7 +159,7 @@
       <nav aria-label="Project links">
         <a :href="REPOSITORY_URL">Source code</a>
         <a :href="`${REPOSITORY_URL}/issues`">Issues</a>
-        <a :href="`${REPOSITORY_URL}/blob/main/LICENSE`">MIT License</a>
+        <a :href="`${REPOSITORY_URL}/blob/master/LICENSE`">MIT License</a>
       </nav>
     </footer>
   </div>
