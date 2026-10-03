@@ -19,12 +19,9 @@ scratch="$(mktemp -d "$TMPDIR/fdroid-release.XXXXXX")"
 remote=''
 cleanup() {
   if [[ -n "$remote" ]]; then
-    ssh "$host" bash -s -- "$remote" "$image" <<'CLEANUP' || true
-set -euo pipefail
-remote="$1"; image="$2"
-docker run --rm -v "$remote:/task" "$image" chown -R "$(id -u):$(id -g)" /task
-rm -rf "$remote"
-CLEANUP
+    # The remote trap restores BGK ownership before removing a newly pulled image.
+    # Do not start another container here, which would re-pull that removed image.
+    ssh "$host" "rm -rf '$remote'" || true
   fi
   rm -rf "$scratch"
 }
@@ -166,8 +163,8 @@ cp "$base"/{source.bundle,recipe.yml,container.sh} "$run/"
 if [[ -f "$base/upstream.apk" ]]; then cp "$base/upstream.apk" "$run/"; fi
 name="fp-release-$(basename "$base")-$abi"
 cleanup() {
-  docker run --rm -v "$base:/task" "$image" chown -R "$(id -u):$(id -g)" /task || true
   docker rm -f "$name" >/dev/null 2>&1 || true
+  docker run --rm -v "$base:/task" "$image" chown -R "$(id -u):$(id -g)" /task || true
   if ! $had_image; then docker image rm "$image" || true; fi
 }
 trap cleanup EXIT

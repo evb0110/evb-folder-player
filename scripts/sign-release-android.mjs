@@ -62,6 +62,8 @@ for (const abi of ['arm64-v8a', 'armeabi-v7a']) {
     'env:FOLDER_PLAYER_STORE_PASSWORD',
     '--key-pass',
     'env:FOLDER_PLAYER_KEY_PASSWORD',
+    '--alignment-preserved',
+    'true',
     '--v1-signing-enabled',
     'false',
     '--v2-signing-enabled',

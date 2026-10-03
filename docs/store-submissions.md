@@ -30,7 +30,7 @@ Both stores read the code, store texts and screenshots from this GitHub reposito
 
   No accounts, ads, analytics or tracking. The release APK has no INTERNET permission.
 
-  Releases on GitHub carry two APKs: EVB-Folder-Player-<version>-arm64-v8a.apk and EVB-Folder-Player-<version>-armeabi-v7a.apk (same versionCode and signing key). Please track whichever ABI you prefer. Exact 0.3.0 sizes will be recorded after the release build.
+  Releases on GitHub carry two APKs: EVB-Folder-Player-<version>-arm64-v8a.apk and EVB-Folder-Player-<version>-armeabi-v7a.apk (same versionCode and signing key). Please track whichever ABI you prefer. For 0.3.0, arm64-v8a is 28.6 MB (28,636,101 bytes) and armeabi-v7a is 23.5 MB (23,454,693 bytes).
   ```
 
 - **Build instructions:**
