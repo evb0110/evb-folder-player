@@ -3,12 +3,14 @@
 | Store | Status | Account needed | Where |
 | --- | --- | --- | --- |
 | GitHub Releases | Published, v0.3.1 | none | <https://github.com/evb0110/evb-folder-player/releases> |
-| IzzyOnDroid | Not submitted | Codeberg | <https://codeberg.org/IzzyOnDroid/repodata/issues/new/choose> |
-| F-Droid | Not submitted | GitLab | <https://gitlab.com/fdroid/fdroiddata> |
+| IzzyOnDroid | Not submitted; current AI policy conflicts with generated app code | Codeberg | <https://izzyondroid.org/docs/general/AppInclusionPolicy/#ai-policy> |
+| F-Droid | Submitted; review and hosted build checks pending | GitLab | <https://gitlab.com/fdroid/fdroiddata/-/merge_requests/51066> |
 
 Both stores read the code, store texts and screenshots from this GitHub repository, so no GitLab or Codeberg mirror of the code is needed. The accounts are only for filing the requests. IzzyOnDroid downloads the signed APK from GitHub Releases. F-Droid rebuilds the tagged source, verifies it against the upstream APK, and publishes the APK with the developer's signature.
 
 ## IzzyOnDroid
+
+The current [AI policy](https://izzyondroid.org/docs/general/AppInclusionPolicy/#ai-policy), checked on October 4, 2026, says app code should be free of LLM-generated output and that vibe-coded apps will be rejected. This conflicts with the app's extensive AI-assisted implementation. The draft below is retained for a fully disclosed request if the maintainers permit one; do not claim policy compliance or reduce the assistance disclosure to obtain inclusion.
 
 1. Create a Codeberg account at <https://codeberg.org/user/sign_up> and confirm the email.
 2. Open <https://codeberg.org/IzzyOnDroid/repodata/issues/new/choose> and choose **App Inclusion Request**.
@@ -42,12 +44,14 @@ Both stores read the code, store texts and screenshots from this GitHub reposito
 - **Assistance Level:** `Dominant – Most code or content was "AI"-generated`. Change this if it doesn't match how you see it.
 - **"AI" Tool(s):** `Claude Code (Claude Opus), OpenAI Codex (GPT)`
 - **What did the tools help with:** `Implementation, tests, UI design, build configuration, store metadata and documentation, written to my specification and reviewed by me.`
-- **AI Accountability:** tick only what is true. You tested the release on your own phone, so the manual-testing box applies.
+- **AI Accountability:** tick only what is true. The form asks whether the human developer reviewed and edited all generated outputs and manually verified all changes. Installing and using the release on a phone does not by itself establish either claim; leave these optional boxes unchecked unless the developer confirms them.
 - **Further Notices:** `Signing certificate SHA-256: beac197d53b5f35d548f8e3b4050a306b30d233cd235830e2d92b1f62183feec. The APK has no dependency-info signing block. An F-Droid inclusion request is planned separately.`
 
 4. Submit, then watch the issue for questions. Codeberg emails you when someone replies.
 
 ## F-Droid
+
+The inclusion request is [merge request !51066](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/51066), from the public [personal fork](https://gitlab.com/7149553/fdroiddata) branch `com.evb.folderplayer`. Continue changes and reviewer replies in this request; do not open a duplicate. The submitted metadata uses `AutoUpdateMode: Version`; the tag filter remains in `UpdateCheckMode`. GitLab's schema rejects `Version v%v`, even though the earlier lint check accepted it.
 
 F-Droid submissions are merge requests to the `fdroiddata` repository. Everything below can be done in the GitLab website.
 
@@ -64,7 +68,7 @@ F-Droid submissions are merge requests to the `fdroiddata` repository. Everythin
 
    Reproducible builds are enabled with Binaries and AllowedAPKSigningKeys. The upstream APK is produced by fdroid build --verbose --test --refresh-scanner --on-server --no-tarball in the buildserver-trixie Linux container, using this recipe, then signed separately with apksigner on macOS. No source or APK content is changed between the Linux build and signing. Two fresh unsigned arm64 builds and upstream Binaries verification are required before publication.
 
-   ABI: the recipe builds arm64-v8a only. GitHub and IzzyOnDroid also carry armeabi-v7a, built with a local recipe variant changing only the architecture and output path. Both architectures retain versionCode 3 and the same signing key.
+   ABI: the recipe builds arm64-v8a only. GitHub also carries armeabi-v7a, built with a local recipe variant changing only the architecture and output path. Both architectures retain versionCode 4 and the same signing key.
    ```
 
 6. Wait for the pipeline, which takes about an hour, and for a reviewer, which can take weeks. Answer their comments in the merge request. If they ask for a change, edit the same file on the same branch. Don't open a new merge request.

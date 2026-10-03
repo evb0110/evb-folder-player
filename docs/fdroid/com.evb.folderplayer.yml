@@ -68,7 +68,7 @@ MaintainerNotes: |-
   # node_modules/react-native-svg/android/build.gradle: Legacy local React Native Maven path; artifacts resolve from Maven Central; precedent com.guiforge.bati.
   # node_modules/react-native-safe-area-context/android/build.gradle: Legacy local React Native Maven path; artifacts resolve from Maven Central; precedent com.guiforge.bati.
 
-AutoUpdateMode: Version v%v
+AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
 UpdateCheckName: Ignore
 UpdateCheckData: app.json|"versionCode":\s*(\d+)|.|"version":\s*"([^"]+)"
