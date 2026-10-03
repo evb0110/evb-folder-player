@@ -40,9 +40,11 @@ def folder(size, *, adaptive=False, monochrome=False, background=False):
 def store_feature():
     image = Image.new('RGB', (1024, 500), '#101918')
     image.paste(folder(256, background=True).convert('RGB'), (96, 122))
-    # macOS source-art generation; launcher icons themselves do not use fonts.
-    font = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial Bold.ttf', 48)
-    ImageDraw.Draw(image).text((400, 218), 'EVB Folder Player', font=font, fill='#F1F6ED')
+    # The app's DM Sans, from node_modules; launcher icons themselves do not use fonts.
+    font = ImageFont.truetype(str(ROOT / 'node_modules/@expo-google-fonts/dm-sans/600SemiBold/DMSans_600SemiBold.ttf'), 56)
+    draw = ImageDraw.Draw(image)
+    top, bottom = draw.textbbox((0, 0), 'EVB Folder Player', font=font)[1::2]
+    draw.text((400, 250 - (top + bottom) // 2), 'EVB Folder Player', font=font, fill='#F5F1E7')
     image.save(ROOT / 'fastlane/metadata/android/en-US/images/featureGraphic.png')
 
 
