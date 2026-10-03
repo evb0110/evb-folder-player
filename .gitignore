@@ -15,6 +15,3 @@ dist/
 /landing/.nuxt/
 /landing/.output/
 /landing/.vercel/
-
-# Keep the root Expo formatter out of pnpm-generated YAML. This lockfile stays tracked.
-/landing/pnpm-lock.yaml

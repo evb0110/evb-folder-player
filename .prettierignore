@@ -5,3 +5,4 @@ modules/**/build/
 package-lock.json
 *.md
 .devkit/
+landing/pnpm-lock.yaml
