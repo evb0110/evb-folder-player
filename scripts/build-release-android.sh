@@ -293,10 +293,7 @@ build_job() {
   trap 'exit 130' INT
   begin=$(date +%s)
   status=0
-  # React Native otherwise embeds Docker's assigned IP in resources.arsc.
-  # Pin the published release's value, preserving its bytes across fresh containers.
   docker run --name "$name" -v "$run:/task" \
-    -e ORG_GRADLE_PROJECT_reactNativeDevServerIp=172.17.0.3 \
     -e RELEASE_ABI="$abi" -e RELEASE_COMMIT="$commit" -e RELEASE_CODE="$code" \
     "$image" bash /task/container.sh > "$run/build.log" 2>&1 &
   docker_pid=$!

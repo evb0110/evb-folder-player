@@ -1,0 +1,1 @@
+Release builds no longer contain the build machine's network address, so F-Droid's build matches the published APK exactly. No playback or storage changes.

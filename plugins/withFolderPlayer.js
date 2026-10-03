@@ -1,4 +1,4 @@
-const { withAppBuildGradle, withAndroidManifest } = require('expo/config-plugins');
+const { withAppBuildGradle, withAndroidManifest, withGradleProperties } = require('expo/config-plugins');
 module.exports = function withFolderPlayer(config) {
   config = withAndroidManifest(config, config => {
     const manifest = config.modResults.manifest;
@@ -24,6 +24,14 @@ module.exports = function withFolderPlayer(config) {
     for (const name of updatesMetadata) {
       app['meta-data'].push({ $: { 'android:name': name, 'tools:node': 'remove' } });
     }
+    return config;
+  });
+  config = withGradleProperties(config, config => {
+    // React Native otherwise embeds the build machine's IP in release resources,
+    // which would make every builder, including F-Droid's, produce different APK bytes.
+    const key = 'reactNativeDevServerIp';
+    config.modResults = config.modResults.filter(item => !(item.type === 'property' && item.key === key));
+    config.modResults.push({ type: 'property', key, value: 'localhost' });
     return config;
   });
   return withAppBuildGradle(config, config => {
