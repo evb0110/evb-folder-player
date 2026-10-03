@@ -1,0 +1,2 @@
+First public release.
+Offline folder-based audiobooks with natural chapter ordering, saved listening positions, history, bookmarks, and undo. Background playback, large car-mode controls, playback speed, sleep timer, and light/dark themes. No accounts, ads, tracking, or network access.

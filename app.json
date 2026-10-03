@@ -2,14 +2,14 @@
   "expo": {
     "name": "Folder Player",
     "slug": "folder-player",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#101918",
     "android": {
       "package": "com.evb.folderplayer",
-      "versionCode": 1,
+      "versionCode": 2,
       "permissions": [
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
@@ -28,7 +28,14 @@
       "./plugins/withFolderPlayer",
       "expo-asset",
       "expo-font",
-      ["expo-splash-screen", { "backgroundColor": "#101918", "image": "./assets/splash-icon.png", "imageWidth": 140 }]
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#101918",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 140
+        }
+      ]
     ],
     "web": {
       "favicon": "./assets/favicon.png",

@@ -1,0 +1,11 @@
+Listen to audiobooks already on your Android device. Choose an audio folder, including subfolders, or scan indexed device audio. Folder Player works offline with no accounts, ads, analytics, or tracking. Your audio files are never modified, moved, renamed, or deleted.
+
+Browse books and folders with natural filename ordering. Keep an independent listening position for each folder and resume your current book from the library or headphones.
+
+Listening progress is saved during playback and on pause. History, bookmarks, checkpoints before jumps, and undo help you return to an earlier position.
+
+Choose chapters, adjust playback speed, or set a sleep timer. Car mode provides a large play/pause button, separate 20-second jump controls, and an optional keep-screen-on setting. Light, dark, and system themes are available.
+
+Playback continues in the background. Headset next/previous commands are ignored to avoid accidental chapter changes; chapters advance automatically when they finish.
+
+The app stores its library and listening history only on your device. Clearing app storage or uninstalling removes that data, leaving your original audio files untouched.

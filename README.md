@@ -1,6 +1,6 @@
 # Folder Player
 
-A personal, offline Android audiobook player built with Expo 57, React Native, and a local Kotlin/Media3 module.
+A private, offline Android audiobook player built with Expo 57, React Native, and a local Kotlin/Media3 module.
 
 - Read existing audio folders, including subfolders, with Android's folder picker. Optionally discover indexed device audio.
 - Browse folders or books with natural filename ordering. Files are never moved, renamed, or deleted.
@@ -11,6 +11,18 @@ A personal, offline Android audiobook player built with Expo 57, React Native, a
 - Switch between light, dark, or system theme. The choice survives restarts.
 - Every control is at least 56 pixels; icon buttons are 64 (76 in car mode), with a 96-pixel play button and a car control that fills the screen.
 - Adjust speed or set a sleep timer. No account, server, advertising, or analytics.
+
+## Install
+
+Download an APK from [GitHub Releases](https://github.com/evb0110/folder-player/releases). Choose `folder-player-<version>-arm64-v8a.apk` for most phones, or `folder-player-<version>-armeabi-v7a.apk` for older 32-bit phones. Allow your browser or file manager to install apps when Android asks.
+
+Each release also has `SHA256SUMS`. Check a download with `shasum -a 256 -c SHA256SUMS --ignore-missing` on macOS or `sha256sum -c SHA256SUMS --ignore-missing` on Linux.
+
+IzzyOnDroid: submission pending. F-Droid: submission pending.
+
+[Obtainium](https://github.com/ImranR98/Obtainium) can check for updates from the GitHub Releases URL above. Select the APK for your phone's architecture. Install updates over the existing app to keep your library and listening history.
+
+Read the [privacy policy](PRIVACY.md). Folder Player has no network access, ads, or tracking; your audio files are never modified.
 
 ## Development
 
@@ -33,15 +45,18 @@ Install JDK 21 and Android SDK 36. Set `FOLDER_PLAYER_JAVA_HOME` and `ANDROID_HO
 npm run build:android
 ```
 
-The script uses Expo prebuild, builds an ARM64 release with bundled JavaScript, and writes `dist/android/folder-player-<version>.apk` and a SHA-256 receipt. No Metro server or Expo account is required to run the APK.
+The script uses Expo prebuild and builds separate ARM64 and 32-bit ARM releases with bundled JavaScript. It writes `dist/android/folder-player-<version>-arm64-v8a.apk`, `dist/android/folder-player-<version>-armeabi-v7a.apk`, and `dist/android/SHA256SUMS`. For version 0.2.0, the APK filenames are `folder-player-0.2.0-arm64-v8a.apk` and `folder-player-0.2.0-armeabi-v7a.apk`. No Metro server or Expo account is required to run the APK.
 
-The initial build generates a private signing key in ignored `.credentials/`. Keep this directory backed up securely. Updates must use the same application ID and signing key to retain installed data. Do not uninstall to upgrade:
+Before the first build, create the private signing key in ignored `.credentials/` with `JAVA_HOME=<jdk> node scripts/create-signing.mjs`. The build script refuses to run without it. Keep this directory backed up securely. Updates must use the same application ID and signing key to retain installed data. Do not uninstall to upgrade:
 
 ```sh
-adb -s DEVICE_SERIAL install -r dist/android/folder-player-0.1.0.apk
+VERSION=$(node -p 'require("./app.json").expo.version')
+adb -s DEVICE_SERIAL install -r "dist/android/folder-player-$VERSION-arm64-v8a.apk"
 ```
 
 The app's package is `com.evb.folderplayer`, separate from Music Folder Player.
+
+See the [release checklist](docs/release.md) for publishing a new version.
 
 ## Native checks
 
