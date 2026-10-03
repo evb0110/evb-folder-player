@@ -106,10 +106,18 @@ runuser -u vagrant -- fdroid rewritemeta com.evb.folderplayer
 cmp metadata/com.evb.folderplayer.yml /task/evidence/normalized-recipe.yml
 runuser -u vagrant -- fdroid rewritemeta --list com.evb.folderplayer
 runuser -u vagrant -- fdroid lint com.evb.folderplayer > /task/evidence/lint.log 2>&1
-sed -i 's|^Repo: .*|Repo: /task/source.git|' metadata/com.evb.folderplayer.yml
-if [[ -f /task/upstream.apk ]]; then
-  sed -i 's|^Binaries: .*|Binaries: http://127.0.0.1:8765/upstream.apk|' metadata/com.evb.folderplayer.yml
-fi
+python3 - <<'PYLOCAL'
+import yaml
+from pathlib import Path
+path = Path('metadata/com.evb.folderplayer.yml')
+p = yaml.safe_load(path.read_text())
+p['Repo'] = '/task/source.git'
+if Path('/task/upstream.apk').exists():
+    p['Binaries'] = 'http://127.0.0.1:8765/upstream.apk'
+path.write_text(yaml.safe_dump(p, sort_keys=False))
+PYLOCAL
+chown vagrant metadata/com.evb.folderplayer.yml
+runuser -u vagrant -- fdroid rewritemeta com.evb.folderplayer > /task/evidence/rewritemeta-local.log 2>&1
 cp metadata/com.evb.folderplayer.yml /task/evidence/local-recipe.yml
 apt-get install -y sudo openjdk-21-jdk-headless
 update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
