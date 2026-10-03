@@ -129,7 +129,7 @@ if [[ -f /task/upstream.apk ]]; then
   trap 'kill "$http_pid"; wait "$http_pid" || true' EXIT
 fi
 unset CI
-sudo --preserve-env --user vagrant env PATH="$PATH" PYTHONPATH="$PYTHONPATH" HOME="$home_vagrant" fdroid build --verbose --test --refresh-scanner --on-server --no-tarball "com.evb.folderplayer:$RELEASE_CODE"
+sudo --preserve-env --user vagrant env PATH="$PATH" PYTHONPATH="$PYTHONPATH" HOME="$home_vagrant" fdroid build --verbose --test --refresh-scanner --on-server --no-tarball "com.evb.folderplayer:$RELEASE_CODE" 2>&1 | tee /task/evidence/fdroid-build.log
 # fdroid can exit zero after failed builds; require the expected APK.
 cp "/task/fdroiddata/tmp/com.evb.folderplayer_$RELEASE_CODE.apk" /task/evidence/unsigned.apk
 /opt/android-sdk/build-tools/36.0.0/aapt2 dump badging /task/evidence/unsigned.apk > /task/evidence/aapt2.txt
@@ -138,8 +138,11 @@ runuser -u vagrant -- fdroid scanner --exit-code --refresh --verbose /task/evide
 sha256sum /task/evidence/unsigned.apk > /task/evidence/SHA256SUMS
 if [[ -f /task/upstream.apk ]]; then
   # Build verifies by copying the upstream signature onto the rebuild and checking it.
-  test -f "/task/fdroiddata/tmp/com.evb.folderplayer_$RELEASE_CODE.apk.binary"
-  cp "/task/fdroiddata/tmp/com.evb.folderplayer_$RELEASE_CODE.apk.binary" /task/evidence/verified-upstream.apk
+  # --test retains failed unsigned APKs, so require success and the allowed signer.
+  grep -F "compared built binary to supplied reference binary successfully" /task/evidence/fdroid-build.log
+  grep -F "supplied reference binary has allowed signer" /task/evidence/fdroid-build.log
+  test -f "/task/fdroiddata/tmp/binaries/com.evb.folderplayer_$RELEASE_CODE.binary.apk"
+  cp "/task/fdroiddata/tmp/binaries/com.evb.folderplayer_$RELEASE_CODE.binary.apk" /task/evidence/verified-upstream.apk
 fi
 CONTAINER
 scp "$scratch/container.sh" "$host:$remote/" >/dev/null
