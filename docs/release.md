@@ -3,7 +3,7 @@
 The public APKs are F-Droid Linux builds signed separately on the Mac. `scripts/build-android.sh` is for quick local builds and must not supply release assets. The application ID stays `com.evb.folderplayer`; both ABIs share one increasing versionCode and the existing signing key.
 
 1. Bump `expo.version`, `expo.android.versionCode`, the package version and lockfile together. Update `docs/fdroid/com.evb.folderplayer.yml` version fields and add `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt`. Review listing text, privacy policy and screenshots. For this release use 0.3.0 / 3.
-2. Run `npm ci` and `npm run check`, then commit the reviewed app changes. The recipe's `Builds[0].commit` line currently reads `commit: RELEASE_TAG_COMMIT`. Keep that explicit placeholder in the app repository until the release tag exists. The build script replaces it with the selected full commit hash only in its private BGK fdroiddata checkout. It also replaces `Repo` with the bundled local Git repository. No source is pushed publicly for dry runs.
+2. Run `npm ci` and `npm run check`, then commit the reviewed app changes. The recipe's `Builds[0].commit` names the previous release until step 9; the build script substitutes the commit being built, and replaces `Repo` with a bundled local Git repository, only in its private BGK fdroiddata checkout. No source is pushed publicly for builds.
 3. Read `~/fleet-hosts.md` and verify `fleet-host check bgk`. The script records Docker inventory, uses only `~/.devkit/folder-player-release/run.*`, creates a fresh container and build directory per ABI, and cleans up its containers, directories and any image it pulled that was absent beforehand. BGK is configurable with `FOLDER_PLAYER_BUILD_HOST`. The container image digest and fdroidserver, fdroiddata, Gradle dispatcher and bootstrap revisions are pinned to the previous successful validation. The setup mirrors F-Droid CI; the build runs source and APK scanners.
 4. Build the reviewed commit, then independently rebuild arm64 from scratch:
 
@@ -33,22 +33,21 @@ The public APKs are F-Droid Linux builds signed separately on the Mac. `scripts/
 
    This checks signed-versus-unsigned content through F-Droid's signature-copy verification. Do not zipalign, recompress or otherwise modify the APK after signing.
 7. Install the published 0.2.0 APK on a task-owned headless ARM64 emulator, then `adb -s SERIAL install -r dist/android/EVB-Folder-Player-0.3.0-arm64-v8a.apk`. Confirm the update is accepted, the launcher label is EVB Folder Player, startup has no crash, and saved app data remains. Stop the emulator afterwards. Also test playback on the owner's phone and supported architectures before public release; emulator startup is not physical headset or codec acceptance.
-8. Record APK sizes in the IzzyOnDroid draft. Verify both checksums from `dist/android`, then tag the exact reviewed and tested commit. Integrating other app-source changes after validation requires rebuilding and repeating the checks. The parent performs publication:
+8. Record APK sizes in the IzzyOnDroid draft. Verify both checksums from `dist/android`, then tag the exact reviewed and tested commit. Integrating other app-source changes after validation requires rebuilding and repeating the checks. Write release notes in the ignored `.devkit/` like the previous release's: what changed, which APK to choose, how to check `SHA256SUMS`, and the signing certificate.
 
    ```sh
    (cd dist/android && shasum -a 256 -c SHA256SUMS)
-   git tag v0.3.0 "$RELEASE_COMMIT"
-   TAG_COMMIT=$(git rev-parse 'v0.3.0^{commit}')
+   git tag -a v0.3.0 -m 'EVB Folder Player 0.3.0' "$RELEASE_COMMIT"
+   git push origin v0.3.0
+   gh release create v0.3.0 --repo evb0110/evb-folder-player --title 'EVB Folder Player 0.3.0' --notes-file .devkit/release-notes.md --verify-tag dist/android/EVB-Folder-Player-0.3.0-arm64-v8a.apk dist/android/EVB-Folder-Player-0.3.0-armeabi-v7a.apk dist/android/SHA256SUMS
    ```
 
-   In the **submitted fdroiddata file** `metadata/com.evb.folderplayer.yml`, replace exactly `Builds[0].commit` (`commit: RELEASE_TAG_COMMIT` in the repository recipe) with the full value of `$TAG_COMMIT`. This avoids a self-referential commit hash in the tagged app tree. Do not move the tag or create a new app commit merely to embed its own hash. The release script already uses this hash for local builds. Keep the public `Repo`, `Binaries`, and `AllowedAPKSigningKeys` unchanged in submitted metadata. Run `fdroid lint com.evb.folderplayer`, `fdroid rewritemeta com.evb.folderplayer` and review that submitted file.
+9. Point the repository recipe at the published tag. The verification run's `normalized-recipe.yml` is the recipe after `fdroid rewritemeta`, with the tag's full commit hash and the public `Repo` and `Binaries`. Copy it over `docs/fdroid/com.evb.folderplayer.yml`, review the diff, commit and publish. This later commit is not part of the tag, so the tag never has to contain its own hash.
 
    ```sh
-   git push origin main
-   git push origin v0.3.0
-   gh release create v0.3.0 --repo evb0110/evb-folder-player --title 'EVB Folder Player 0.3.0' --notes-file fastlane/metadata/android/en-US/changelogs/3.txt dist/android/EVB-Folder-Player-0.3.0-arm64-v8a.apk dist/android/EVB-Folder-Player-0.3.0-armeabi-v7a.apk dist/android/SHA256SUMS
+   cp dist/android/binaries-verification/arm64-v8a/normalized-recipe.yml docs/fdroid/com.evb.folderplayer.yml
    ```
 
-9. Follow [store-submissions.md](store-submissions.md). F-Droid's Binaries URL points to the signed arm64 GitHub asset. Once accepted, IzzyOnDroid pulls the GitHub APK and F-Droid rebuilds tags and publishes the verified upstream APK with the developer signature. Monitor both stores; a GitHub release does not mean store publication.
+10. Follow [store-submissions.md](store-submissions.md). F-Droid's Binaries URL points to the signed arm64 GitHub asset. Once accepted, IzzyOnDroid pulls the GitHub APK, and F-Droid rebuilds new tags and publishes the verified upstream APK with the developer signature. After acceptance F-Droid's own metadata, not this file, drives its builds. Monitor both stores; a GitHub release does not mean store publication.
 
 Back up the existing ignored `.credentials/` directory securely. Never commit it or attach it to a release. Losing the key prevents compatible updates. Existing GitHub 0.2.0 installs can update to 0.3.0 without uninstalling or losing their listening journal.

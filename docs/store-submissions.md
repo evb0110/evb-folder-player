@@ -2,7 +2,7 @@
 
 | Store | Status | Account needed | Where |
 | --- | --- | --- | --- |
-| GitHub Releases | Published, v0.2.0 | none | <https://github.com/evb0110/evb-folder-player/releases> |
+| GitHub Releases | Published, v0.3.0 | none | <https://github.com/evb0110/evb-folder-player/releases> |
 | IzzyOnDroid | Not submitted | Codeberg | <https://codeberg.org/IzzyOnDroid/repodata/issues/new/choose> |
 | F-Droid | Not submitted | GitLab | <https://gitlab.com/fdroid/fdroiddata> |
 
@@ -54,7 +54,7 @@ F-Droid submissions are merge requests to the `fdroiddata` repository. Everythin
 1. Create a GitLab account at <https://gitlab.com/users/sign_up>. If GitLab asks for a phone number or credit card for CI, don't provide one. Mention it in the merge request instead, and the F-Droid team will run the CI.
 2. Open <https://gitlab.com/fdroid/fdroiddata> and click **Fork**. Keep the fork public.
 3. In your fork, create a branch named `com.evb.folderplayer`. Use **Code → Branches → New branch**, starting from `master`.
-4. On that branch, add the file `metadata/com.evb.folderplayer.yml`. Copy [`docs/fdroid/com.evb.folderplayer.yml`](fdroid/com.evb.folderplayer.yml) from this repository and replace `Builds[0].commit: RELEASE_TAG_COMMIT` with the full `git rev-parse 'v0.3.0^{commit}'` hash, as described in [release.md](release.md). Use the commit message `New App: com.evb.folderplayer`.
+4. On that branch, add the file `metadata/com.evb.folderplayer.yml`. Paste the exact contents of [`docs/fdroid/com.evb.folderplayer.yml`](fdroid/com.evb.folderplayer.yml) from this repository. It already names the v0.3.0 commit. Use the commit message `New App: com.evb.folderplayer`.
 5. Open **Merge requests → New merge request**. Choose your branch as the source and `fdroid/fdroiddata` `master` as the target. Title it `New app: EVB Folder Player`, choose the **App inclusion** template, and tick the checklist items. Add this note under the checklist:
 
    ```text

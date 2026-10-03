@@ -6,3 +6,5 @@ package-lock.json
 *.md
 .devkit/
 landing/pnpm-lock.yaml
+# Formatted by fdroid rewritemeta, which F-Droid CI enforces.
+docs/fdroid/
