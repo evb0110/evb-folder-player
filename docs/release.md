@@ -24,7 +24,7 @@ The public APKs are F-Droid Linux builds signed separately on the Mac. `scripts/
    ```
 
    `ANDROID_HOME`, `FOLDER_PLAYER_JAVA_HOME` and `FOLDER_PLAYER_BUILD_TOOLS` override Mac SDK/JDK defaults. Build-tools 36.0.0 is the default. The script preserves the Linux APK alignment with `--alignment-preserved true`, uses password environment references, verifies package/version/label/ABI and no INTERNET permission, signs, checks the certificate, and writes verification receipts and `SHA256SUMS`. Published 0.2.0 APKs use v2 only, so the script matches that scheme. The certificate SHA-256 must be `beac197d53b5f35d548f8e3b4050a306b30d233cd235830e2d92b1f62183feec`.
-6. Run the end-to-end upstream check before publishing. The signed APK is served only on loopback within the fresh container; only this local recipe's `Binaries` is changed. F-Droid rebuilds, copies the upstream signature onto its APK and verifies it. Require the successful verification log and matching upstream APK:
+6. Run the end-to-end upstream check before publishing. The signed APK is served over HTTPS only on loopback within the fresh container; only this local recipe's `Binaries` is changed. F-Droid's downloader requires HTTPS, so the container creates a temporary TLS certificate and process-local CA bundle, with a reference-download preflight. No F-Droid code is modified. F-Droid rebuilds, copies the upstream signature onto its APK and verifies it. Require the successful verification log and matching upstream APK:
 
    ```sh
    FOLDER_PLAYER_ABIS=arm64-v8a FOLDER_PLAYER_UPSTREAM_APK="$PWD/dist/android/EVB-Folder-Player-0.3.0-arm64-v8a.apk" npm run build:android:release -- "$RELEASE_COMMIT" dist/android/binaries-verification

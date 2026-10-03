@@ -2,7 +2,7 @@
 # F-Droid's Linux build, followed by a separate Mac signing step. No keys leave the Mac.
 # Usage: scripts/build-release-android.sh [commit-or-tag] [unsigned-output-directory]
 # FOLDER_PLAYER_ABIS=arm64-v8a builds only arm64. FOLDER_PLAYER_UPSTREAM_APK verifies
-# a signed arm64 APK through Binaries using a container-local HTTP server.
+# a signed arm64 APK through Binaries using a container-local HTTPS server.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ref="${1:-HEAD}"
@@ -113,7 +113,7 @@ path = Path('metadata/com.evb.folderplayer.yml')
 p = yaml.safe_load(path.read_text())
 p['Repo'] = '/task/source.git'
 if Path('/task/upstream.apk').exists():
-    p['Binaries'] = 'http://127.0.0.1:8765/upstream.apk'
+    p['Binaries'] = 'https://127.0.0.1:8765/upstream.apk'
 path.write_text(yaml.safe_dump(p, sort_keys=False))
 PYLOCAL
 chown vagrant metadata/com.evb.folderplayer.yml
@@ -129,9 +129,40 @@ sudo --preserve-env --user vagrant env PATH="$PATH" PYTHONPATH="$PYTHONPATH" HOM
 rm "$home_vagrant/fdroiddata" "$home_vagrant/.gitconfig"
 http_pid=''
 if [[ -f /task/upstream.apk ]]; then
-  python3 -m http.server 8765 --bind 127.0.0.1 --directory /task > /task/evidence/http.log 2>&1 &
+  # F-Droid's reference downloader enforces HTTPS. This TLS identity is temporary;
+  # it is unrelated to the developer APK key and trusted only by this process tree.
+  openssl req -x509 -newkey rsa:2048 -nodes -sha256 -days 1 -subj '/CN=127.0.0.1' \
+    -addext 'subjectAltName=IP:127.0.0.1' -keyout /task/tls.key -out /task/tls.crt \
+    > /task/evidence/tls-setup.log 2>&1
+  cat /etc/ssl/certs/ca-certificates.crt /task/tls.crt > /task/ca-bundle.crt
+  export REQUESTS_CA_BUNDLE=/task/ca-bundle.crt
+  cat > /task/https-server.py <<'PYHTTP'
+from functools import partial
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+import ssl
+server = ThreadingHTTPServer(('127.0.0.1', 8765), partial(SimpleHTTPRequestHandler, directory='/task'))
+context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+context.load_cert_chain('/task/tls.crt', '/task/tls.key')
+server.socket = context.wrap_socket(server.socket, server_side=True)
+with open('/task/https-ready', 'w') as ready:
+    ready.write('ready\n')
+server.serve_forever()
+PYHTTP
+  mkfifo /task/https-ready
+  exec 3<> /task/https-ready
+  python3 /task/https-server.py > /task/evidence/https.log 2>&1 &
   http_pid=$!
   trap 'kill "$http_pid"; wait "$http_pid" || true' EXIT
+  read -r -t 30 ready <&3
+  test "$ready" = ready
+  exec 3>&-
+  runuser -u vagrant -- python3 - <<'PYPREFLIGHT'
+from pathlib import Path
+from fdroidserver import net
+net.download_file('https://127.0.0.1:8765/upstream.apk', local_filename='/task/evidence/upstream-preflight.apk', retries=0)
+assert Path('/task/evidence/upstream-preflight.apk').read_bytes() == Path('/task/upstream.apk').read_bytes()
+print('F-Droid HTTPS reference download preflight PASS')
+PYPREFLIGHT
 fi
 unset CI
 sudo --preserve-env --user vagrant env PATH="$PATH" PYTHONPATH="$PYTHONPATH" HOME="$home_vagrant" fdroid build --verbose --test --refresh-scanner --on-server --no-tarball "com.evb.folderplayer:$RELEASE_CODE" 2>&1 | tee /task/evidence/fdroid-build.log
