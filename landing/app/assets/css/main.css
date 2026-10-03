@@ -1,0 +1,47 @@
+@import 'tailwindcss';
+@import '@nuxt/ui';
+@import '@fontsource-variable/inter';
+
+:root {
+  color-scheme: light;
+  --paper: #f1f6ed;
+  --paper-raised: #fbfcf8;
+  --ink: #101918;
+  --ink-muted: #43564d;
+  --ink-subtle: #52675b;
+  --line: rgb(16 25 24 / 15%);
+  --accent: #245e43;
+  --accent-ink: #17432f;
+  --accent-soft: #e2ebdc;
+  --sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+  --ui-primary: var(--accent);
+}
+
+html {
+  background: var(--paper);
+  scroll-padding-top: 24px;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 5px;
+}
+
+::selection {
+  color: var(--ink);
+  background: #c6e4ba;
+}

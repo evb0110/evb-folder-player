@@ -4,5 +4,6 @@
     "strict": true,
     "types": ["react", "node"],
     "allowImportingTsExtensions": true
-  }
+  },
+  "exclude": ["node_modules", "android", "ios", "dist", "landing"]
 }
