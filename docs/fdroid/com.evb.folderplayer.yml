@@ -16,7 +16,7 @@ Binaries:
 Builds:
   - versionName: 0.3.1
     versionCode: 4
-    commit: 070613b11805ea75645665c6ded51cf939e2368e
+    commit: 407feda7ec40542cfdad7214b5b32d5e2fb82f6f
     sudo:
       - apt-get update
       - apt-get install -y ca-certificates curl xz-utils openjdk-21-jdk-headless

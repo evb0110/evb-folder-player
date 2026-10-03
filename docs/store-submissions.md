@@ -2,7 +2,7 @@
 
 | Store | Status | Account needed | Where |
 | --- | --- | --- | --- |
-| GitHub Releases | Published, v0.3.0 | none | <https://github.com/evb0110/evb-folder-player/releases> |
+| GitHub Releases | Published, v0.3.1 | none | <https://github.com/evb0110/evb-folder-player/releases> |
 | IzzyOnDroid | Not submitted | Codeberg | <https://codeberg.org/IzzyOnDroid/repodata/issues/new/choose> |
 | F-Droid | Not submitted | GitLab | <https://gitlab.com/fdroid/fdroiddata> |
 
@@ -30,7 +30,7 @@ Both stores read the code, store texts and screenshots from this GitHub reposito
 
   No accounts, ads, analytics or tracking. The release APK has no INTERNET permission.
 
-  Releases on GitHub carry two APKs: EVB-Folder-Player-<version>-arm64-v8a.apk and EVB-Folder-Player-<version>-armeabi-v7a.apk (same versionCode and signing key). Please track whichever ABI you prefer. For 0.3.0, arm64-v8a is 28.6 MB (28,636,101 bytes) and armeabi-v7a is 23.5 MB (23,454,693 bytes).
+  Releases on GitHub carry two APKs: EVB-Folder-Player-<version>-arm64-v8a.apk and EVB-Folder-Player-<version>-armeabi-v7a.apk (same versionCode and signing key). Please track whichever ABI you prefer. For 0.3.1, arm64-v8a is 28.6 MB (28,636,101 bytes) and armeabi-v7a is 23.5 MB (23,454,693 bytes).
   ```
 
 - **Build instructions:**
@@ -54,7 +54,7 @@ F-Droid submissions are merge requests to the `fdroiddata` repository. Everythin
 1. Create a GitLab account at <https://gitlab.com/users/sign_up>. If GitLab asks for a phone number or credit card for CI, don't provide one. Mention it in the merge request instead, and the F-Droid team will run the CI.
 2. Open <https://gitlab.com/fdroid/fdroiddata> and click **Fork**. Keep the fork public.
 3. In your fork, create a branch named `com.evb.folderplayer`. Use **Code → Branches → New branch**, starting from `master`.
-4. On that branch, add the file `metadata/com.evb.folderplayer.yml`. Paste the exact contents of [`docs/fdroid/com.evb.folderplayer.yml`](fdroid/com.evb.folderplayer.yml) from this repository. It already names the v0.3.0 commit. Use the commit message `New App: com.evb.folderplayer`.
+4. On that branch, add the file `metadata/com.evb.folderplayer.yml`. Paste the exact contents of [`docs/fdroid/com.evb.folderplayer.yml`](fdroid/com.evb.folderplayer.yml) from this repository. It already names the v0.3.1 commit. Use the commit message `New App: com.evb.folderplayer`.
 5. Open **Merge requests → New merge request**. Choose your branch as the source and `fdroid/fdroiddata` `master` as the target. Title it `New app: EVB Folder Player`, choose the **App inclusion** template, and tick the checklist items. Add this note under the checklist:
 
    ```text
