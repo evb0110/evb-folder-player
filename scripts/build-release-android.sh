@@ -19,7 +19,12 @@ scratch="$(mktemp -d "$TMPDIR/fdroid-release.XXXXXX")"
 remote=''
 cleanup() {
   if [[ -n "$remote" ]]; then
-    ssh "$host" "docker run --rm -v '$remote:/task' '$image' chown -R $(id -u):$(id -g) /task; rm -rf '$remote'" || true
+    ssh "$host" bash -s -- "$remote" "$image" <<'CLEANUP' || true
+set -euo pipefail
+remote="$1"; image="$2"
+docker run --rm -v "$remote:/task" "$image" chown -R "$(id -u):$(id -g)" /task
+rm -rf "$remote"
+CLEANUP
   fi
   rm -rf "$scratch"
 }
@@ -77,10 +82,7 @@ b['commit'] = commit
 if abi != 'arm64-v8a':
     b['output'] = b['output'].replace('arm64-v8a', abi)
     b['build'] = [s.replace('arm64-v8a', abi) for s in b['build']]
-p['Repo'] = '/task/source.git'
-if Path('/task/upstream.apk').exists():
-    p['Binaries'] = 'http://127.0.0.1:8765/upstream.apk'
-else:
+if not Path('/task/upstream.apk').exists():
     # Nothing public exists before release. Unsigned production uses this same build.
     p.pop('Binaries', None)
     p.pop('AllowedAPKSigningKeys', None)
@@ -100,12 +102,18 @@ chmod 0600 /task/fdroiddata/config.yml
 runuser -u vagrant -- fdroid --version
 cd /task/fdroiddata
 # Local Repo deliberately differs from SourceCode; retain the lint result.
-runuser -u vagrant -- fdroid lint com.evb.folderplayer > /task/evidence/lint.log 2>&1
+runuser -u vagrant -- fdroid lint com.evb.folderplayer > /task/evidence/lint-initial.log 2>&1 || true
 runuser -u vagrant -- fdroid rewritemeta com.evb.folderplayer > /task/evidence/rewritemeta.log 2>&1
 cp metadata/com.evb.folderplayer.yml /task/evidence/normalized-recipe.yml
 runuser -u vagrant -- fdroid rewritemeta com.evb.folderplayer
 cmp metadata/com.evb.folderplayer.yml /task/evidence/normalized-recipe.yml
 runuser -u vagrant -- fdroid rewritemeta --list com.evb.folderplayer
+runuser -u vagrant -- fdroid lint com.evb.folderplayer > /task/evidence/lint.log 2>&1
+sed -i 's|^Repo: .*|Repo: /task/source.git|' metadata/com.evb.folderplayer.yml
+if [[ -f /task/upstream.apk ]]; then
+  sed -i 's|^Binaries: .*|Binaries: http://127.0.0.1:8765/upstream.apk|' metadata/com.evb.folderplayer.yml
+fi
+cp metadata/com.evb.folderplayer.yml /task/evidence/local-recipe.yml
 apt-get install -y sudo openjdk-21-jdk-headless
 update-alternatives --set java /usr/lib/jvm/java-21-openjdk-amd64/bin/java
 cp metadata/com.evb.folderplayer.yml "$home_vagrant/metadata/"
@@ -140,7 +148,8 @@ for abi in $abis; do
   dest="$out/$abi"
   mkdir -p "$dest"
   # Fresh container, task directory, Gradle home and app checkout for every ABI/run.
-  ssh "$host" bash -s -- "$remote" "$abi" "$commit" "$code" "$image" <<'REMOTE' > "$dest/build.log" 2>&1
+  status=0
+  ssh "$host" bash -s -- "$remote" "$abi" "$commit" "$code" "$image" <<'REMOTE' > "$dest/build.log" 2>&1 || status=$?
 set -euo pipefail
 base="$1"; abi="$2"; commit="$3"; code="$4"; image="$5"
 docker images --no-trunc > "$base/docker-images-before.txt"
@@ -154,6 +163,7 @@ cp "$base"/{source.bundle,recipe.yml,container.sh} "$run/"
 if [[ -f "$base/upstream.apk" ]]; then cp "$base/upstream.apk" "$run/"; fi
 name="fp-release-$(basename "$base")-$abi"
 cleanup() {
+  docker run --rm -v "$base:/task" "$image" chown -R "$(id -u):$(id -g)" /task || true
   docker rm -f "$name" >/dev/null 2>&1 || true
   if ! $had_image; then docker image rm "$image" || true; fi
 }
@@ -161,6 +171,7 @@ trap cleanup EXIT
 docker run --name "$name" -v "$run:/task" -e RELEASE_ABI="$abi" -e RELEASE_COMMIT="$commit" -e RELEASE_CODE="$code" "$image" bash /task/container.sh
 REMOTE
   scp -r "$host:$remote/$abi/evidence/." "$dest/" >/dev/null
+  [[ "$status" == 0 ]] || { tail -80 "$dest/build.log" >&2; exit "$status"; }
   cp "$dest/unsigned.apk" "$out/EVB-Folder-Player-$version-$abi-unsigned.apk"
   printf '%s\n' "$commit" > "$dest/commit.txt"
 done
