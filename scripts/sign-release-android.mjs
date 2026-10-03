@@ -1,12 +1,17 @@
 // Sign the F-Droid Linux outputs in place on the Mac. Credentials never leave it.
-// Usage: node scripts/sign-release-android.mjs [unsigned-directory] [signed-directory]
+// Usage: node scripts/sign-release-android.mjs [unsigned-directory] [signed-directory] [commit-or-tag]
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { resolve, join } from 'node:path';
 
-const app = JSON.parse(readFileSync(new URL('../app.json', import.meta.url))).expo;
+// Signing an older tag must validate that tag's version, package and label.
+const app = JSON.parse(
+  process.argv[4]
+    ? execFileSync('git', ['show', `${process.argv[4]}:app.json`], { encoding: 'utf8' })
+    : readFileSync(new URL('../app.json', import.meta.url), 'utf8'),
+).expo;
 const unsignedDir = resolve(process.argv[2] ?? 'dist/android/unsigned');
 const signedDir = resolve(process.argv[3] ?? 'dist/android');
 const credentials = resolve(process.env.FOLDER_PLAYER_CREDENTIALS_DIR ?? '.credentials');

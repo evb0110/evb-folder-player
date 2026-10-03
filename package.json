@@ -43,6 +43,7 @@
     "preview:web": "node scripts/preview-web.mjs",
     "build:android": "bash scripts/build-android.sh",
     "build:android:release": "bash scripts/build-release-android.sh",
+    "release:android": "bash scripts/build-release-android.sh --release",
     "sign:android:release": "node scripts/sign-release-android.mjs"
   }
 }

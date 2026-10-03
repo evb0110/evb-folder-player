@@ -59,11 +59,10 @@ The app's package is `com.evb.folderplayer`, separate from Music Folder Player.
 Published APKs are built by F-Droid on Linux, then signed on the Mac with the same developer key. F-Droid verifies its rebuild against the signed arm64 APK before distributing it. GitHub, IzzyOnDroid and F-Droid updates keep the same application ID and signing identity.
 
 ```sh
-npm run build:android:release -- HEAD dist/android/unsigned
-FOLDER_PLAYER_CREDENTIALS_DIR=/path/to/existing/.credentials npm run sign:android:release
+FOLDER_PLAYER_CREDENTIALS_DIR=/path/to/existing/.credentials npm run release:android -- HEAD dist/android/release
 ```
 
-The Linux build host defaults to `bgk`; set `FOLDER_PLAYER_BUILD_HOST` to override it. See the [release checklist](docs/release.md) for verification, tagging and publishing.
+The command builds both ABIs and a repeat arm64 build concurrently, checks determinism, signs on the Mac and runs F-Droid Binaries verification. The Linux build host defaults to `bgk`; set `FOLDER_PLAYER_BUILD_HOST` to override it. `FOLDER_PLAYER_BUILD_CONCURRENCY` defaults to 2. Only the pinned build image is retained between runs; each build uses a fresh container and private build state. See the [release checklist](docs/release.md) for verification, tagging and publishing.
 
 ## Native checks
 
