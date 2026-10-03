@@ -4,7 +4,7 @@
 | --- | --- | --- | --- |
 | GitHub Releases | Published, v0.3.1 | none | <https://github.com/evb0110/evb-folder-player/releases> |
 | IzzyOnDroid | Not submitted; current AI policy conflicts with generated app code | Codeberg | <https://izzyondroid.org/docs/general/AppInclusionPolicy/#ai-policy> |
-| F-Droid | Submitted; review and hosted build checks pending | GitLab | <https://gitlab.com/fdroid/fdroiddata/-/merge_requests/51066> |
+| F-Droid | Submitted; hosted checks passed, maintainer review pending | GitLab | <https://gitlab.com/fdroid/fdroiddata/-/merge_requests/51066> |
 
 Both stores read the code, store texts and screenshots from this GitHub repository, so no GitLab or Codeberg mirror of the code is needed. The accounts are only for filing the requests. IzzyOnDroid downloads the signed APK from GitHub Releases. F-Droid rebuilds the tagged source, verifies it against the upstream APK, and publishes the APK with the developer's signature.
 
@@ -17,7 +17,7 @@ The current [AI policy](https://izzyondroid.org/docs/general/AppInclusionPolicy/
 3. Fill in the form:
 
 - **Title:** `[AppRequest] EVB Folder Player`
-- **Guidelines:** tick all four boxes: you are the developer, the app follows the inclusion policy, it is not listed yet, and the Fastlane folder exists.
+- **Guidelines:** confirm only statements that are true. Do not tick that the app follows the inclusion policy while the AI-policy conflict above remains unresolved. The other statements concern developer authorship, whether the app is already listed, and the Fastlane folder.
 - **Link to the source code:** `https://github.com/evb0110/evb-folder-player`
 - **Link to app in another app store:** leave empty, or add the F-Droid page once it exists.
 - **License used:** `MIT`
@@ -43,15 +43,17 @@ The current [AI policy](https://izzyondroid.org/docs/general/AppInclusionPolicy/
 
 - **Assistance Level:** `Dominant – Most code or content was "AI"-generated`. Change this if it doesn't match how you see it.
 - **"AI" Tool(s):** `Claude Code (Claude Opus), OpenAI Codex (GPT)`
-- **What did the tools help with:** `Implementation, tests, UI design, build configuration, store metadata and documentation, written to my specification and reviewed by me.`
+- **What did the tools help with:** `Implementation, tests, UI design, build configuration, store metadata and documentation, written to my specification. I have installed and used the release on my phone.`
 - **AI Accountability:** tick only what is true. The form asks whether the human developer reviewed and edited all generated outputs and manually verified all changes. Installing and using the release on a phone does not by itself establish either claim; leave these optional boxes unchecked unless the developer confirms them.
-- **Further Notices:** `Signing certificate SHA-256: beac197d53b5f35d548f8e3b4050a306b30d233cd235830e2d92b1f62183feec. The APK has no dependency-info signing block. An F-Droid inclusion request is planned separately.`
+- **Further Notices:** `Signing certificate SHA-256: beac197d53b5f35d548f8e3b4050a306b30d233cd235830e2d92b1f62183feec. The APK has no dependency-info signing block. F-Droid inclusion request: https://gitlab.com/fdroid/fdroiddata/-/merge_requests/51066.`
 
 4. Submit, then watch the issue for questions. Codeberg emails you when someone replies.
 
 ## F-Droid
 
 The inclusion request is [merge request !51066](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/51066), from the public [personal fork](https://gitlab.com/7149553/fdroiddata) branch `com.evb.folderplayer`. Continue changes and reviewer replies in this request; do not open a duplicate. The submitted metadata uses `AutoUpdateMode: Version`; the tag filter remains in `UpdateCheckMode`. GitLab's schema rejects `Version v%v`, even though the earlier lint check accepted it.
+
+All nine jobs passed in both the [push pipeline](https://gitlab.com/7149553/fdroiddata/-/pipelines/2909738251) and [merge-request pipeline](https://gitlab.com/7149553/fdroiddata/-/pipelines/2909739020) for metadata commit `3a7740d32f0b72a65bf9e9b8d297fd37621818e0`, checked on October 4, 2026. The hosted build reproduced the signed upstream APK and verified its signer; APK scanning passed. The Reports tab has two minor audio-storage permission notices and nine informational entries, explained in the request. Acceptance and publication still require F-Droid maintainer review.
 
 F-Droid submissions are merge requests to the `fdroiddata` repository. Everything below can be done in the GitLab website.
 
