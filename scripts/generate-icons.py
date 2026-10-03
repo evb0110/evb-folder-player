@@ -1,7 +1,7 @@
 """Generate launcher layers and a small-size favicon. Requires Pillow."""
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
 BACKGROUND = '#F1F6ED'
@@ -37,7 +37,17 @@ def folder(size, *, adaptive=False, monochrome=False, background=False):
     return image.resize((size, size), Image.Resampling.LANCZOS)
 
 
+def store_feature():
+    image = Image.new('RGB', (1024, 500), '#101918')
+    image.paste(folder(256, background=True).convert('RGB'), (96, 122))
+    # macOS source-art generation; launcher icons themselves do not use fonts.
+    font = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial Bold.ttf', 48)
+    ImageDraw.Draw(image).text((400, 218), 'EVB Folder Player', font=font, fill='#F1F6ED')
+    image.save(ROOT / 'fastlane/metadata/android/en-US/images/featureGraphic.png')
+
+
 if __name__ == '__main__':
+    store_feature()
     assets = ROOT / 'assets'
     folder(1024, background=True).save(assets / 'icon.png')
     folder(1024, adaptive=True).save(assets / 'android-icon-foreground.png')

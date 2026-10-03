@@ -1,8 +1,8 @@
 {
-  "name": "folder-player",
+  "name": "evb-folder-player",
   "description": "A private, offline audiobook player with recoverable progress and large controls.",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "main": "index.ts",
   "dependencies": {
     "@expo-google-fonts/dm-sans": "^0.4.2",
@@ -41,6 +41,8 @@
     "check": "npm run typecheck && npm run lint && npm test",
     "export:web": "expo export --platform web --output-dir dist/web",
     "preview:web": "node scripts/preview-web.mjs",
-    "build:android": "bash scripts/build-android.sh"
+    "build:android": "bash scripts/build-android.sh",
+    "build:android:release": "bash scripts/build-release-android.sh",
+    "sign:android:release": "node scripts/sign-release-android.mjs"
   }
 }

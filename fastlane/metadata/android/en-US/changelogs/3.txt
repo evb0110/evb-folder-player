@@ -1,0 +1,1 @@
+Renamed to EVB Folder Player. Reproducible Linux release builds retain the developer signing key across GitHub, IzzyOnDroid and F-Droid. No playback or storage changes.

@@ -1,10 +1,54 @@
 # Release checklist
 
-1. Bump `expo.version` and `expo.android.versionCode` in `app.json`. Keep the package version aligned. Version codes must increase; the first public release is 0.2.0, code 2.
-2. Add `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt` (at most 500 characters). Review the listing, privacy policy, and screenshots against the release UI.
-3. Run `npm run check`, then `npm run build:android`. Verify both APKs' package, version name/code, signing certificate, and permissions. The release must have no `INTERNET` permission. Test an in-place upgrade and playback on the supported architectures.
-4. Check `dist/android/SHA256SUMS` against both `folder-player-X.Y.Z-arm64-v8a.apk` and `folder-player-X.Y.Z-armeabi-v7a.apk`. Before the first public release, review the secret-scan report and resolve any private information in the history being published.
-5. Commit the reviewed release changes and tag that commit `vX.Y.Z`. Create a GitHub release for the tag and attach both APKs and `SHA256SUMS` from that build. For v0.2.0, use `folder-player-0.2.0-arm64-v8a.apk` and `folder-player-0.2.0-armeabi-v7a.apk`.
-6. Once accepted, IzzyOnDroid checks GitHub Releases and pulls the matching APK. F-Droid builds from source: its metadata uses `UpdateCheckMode: Tags` and `AutoUpdateMode: Version` to detect tags and add builds. Expo generates Android files, so the metadata must explicitly read versions from `app.json`. Monitor each repository's update result; a GitHub release alone does not mean either store has published it.
+The public APKs are F-Droid Linux builds signed separately on the Mac. `scripts/build-android.sh` is for quick local builds and must not supply release assets. The application ID stays `com.evb.folderplayer`; both ABIs share one increasing versionCode and the existing signing key.
 
-Back up the ignored `.credentials/` directory securely, including the keystore and signing properties. Never commit it or attach it to a release. Losing the signing key prevents compatible updates to existing installations. F-Droid normally uses its own signing key, so users may need to stay with the same distribution source for in-place updates.
+1. Bump `expo.version`, `expo.android.versionCode`, the package version and lockfile together. Update `docs/fdroid/com.evb.folderplayer.yml` version fields and add `fastlane/metadata/android/en-US/changelogs/<versionCode>.txt`. Review listing text, privacy policy and screenshots. For this release use 0.3.0 / 3.
+2. Run `npm ci` and `npm run check`, then commit the reviewed app changes. The recipe's `Builds[0].commit` line currently reads `commit: RELEASE_TAG_COMMIT`. Keep that explicit placeholder in the app repository until the release tag exists. The build script replaces it with the selected full commit hash only in its private BGK fdroiddata checkout. It also replaces `Repo` with the bundled local Git repository. No source is pushed publicly for dry runs.
+3. Read `~/fleet-hosts.md` and verify `fleet-host check bgk`. The script records Docker inventory, uses only `~/.devkit/folder-player-release/run.*`, creates a fresh container and build directory per ABI, and cleans up its containers, directories and any image it pulled that was absent beforehand. BGK is configurable with `FOLDER_PLAYER_BUILD_HOST`. The container image digest and fdroidserver, fdroiddata, Gradle dispatcher and bootstrap revisions are pinned to the previous successful validation. The setup mirrors F-Droid CI; the build runs source and APK scanners.
+4. Build the reviewed commit, then independently rebuild arm64 from scratch:
+
+   ```sh
+   RELEASE_COMMIT=$(git rev-parse HEAD)
+   npm run build:android:release -- "$RELEASE_COMMIT" dist/android/unsigned
+   FOLDER_PLAYER_ABIS=arm64-v8a npm run build:android:release -- "$RELEASE_COMMIT" dist/android/repeat
+   cmp dist/android/unsigned/EVB-Folder-Player-0.3.0-arm64-v8a-unsigned.apk dist/android/repeat/EVB-Folder-Player-0.3.0-arm64-v8a-unsigned.apk
+   shasum -a 256 dist/android/{unsigned,repeat}/EVB-Folder-Player-0.3.0-arm64-v8a-unsigned.apk
+   ```
+
+   The armeabi-v7a run uses a local-only recipe variant changing just the ABI in `build` and `output`. F-Droid metadata ships arm64 only. Retain the two hashes and build logs. A mismatch blocks release; investigate entry-by-entry and fix the source or recipe before repeating both builds.
+5. Sign on the Mac, referencing the existing credentials in place. Never copy or send credentials to BGK. The default is this checkout's ignored `.credentials`; for a worktree point to the main checkout:
+
+   ```sh
+   export FOLDER_PLAYER_CREDENTIALS_DIR=/Users/evb/WebstormProjects/folder-player/.credentials
+   npm run sign:android:release -- dist/android/unsigned dist/android
+   ```
+
+   `ANDROID_HOME`, `FOLDER_PLAYER_JAVA_HOME` and `FOLDER_PLAYER_BUILD_TOOLS` override Mac SDK/JDK defaults. Build-tools 36.0.0 is the default. The script uses password environment references, verifies package/version/label/ABI and no INTERNET permission, signs, checks the certificate, and writes verification receipts and `SHA256SUMS`. Published 0.2.0 APKs use v2 only, so the script matches that scheme. The certificate SHA-256 must be `beac197d53b5f35d548f8e3b4050a306b30d233cd235830e2d92b1f62183feec`.
+6. Run the end-to-end upstream check before publishing. The signed APK is served only on loopback within the fresh container; only this local recipe's `Binaries` is changed. F-Droid rebuilds, copies the upstream signature onto its APK and verifies it. Require the successful verification log and matching upstream APK:
+
+   ```sh
+   FOLDER_PLAYER_ABIS=arm64-v8a FOLDER_PLAYER_UPSTREAM_APK="$PWD/dist/android/EVB-Folder-Player-0.3.0-arm64-v8a.apk" npm run build:android:release -- "$RELEASE_COMMIT" dist/android/binaries-verification
+   cmp dist/android/EVB-Folder-Player-0.3.0-arm64-v8a.apk dist/android/binaries-verification/arm64-v8a/verified-upstream.apk
+   ```
+
+   This checks signed-versus-unsigned content through F-Droid's signature-copy verification. Do not zipalign, recompress or otherwise modify the APK after signing.
+7. Install the published 0.2.0 APK on a task-owned headless ARM64 emulator, then `adb -s SERIAL install -r dist/android/EVB-Folder-Player-0.3.0-arm64-v8a.apk`. Confirm the update is accepted, the launcher label is EVB Folder Player, startup has no crash, and saved app data remains. Stop the emulator afterwards. Also test playback on the owner's phone and supported architectures before public release; emulator startup is not physical headset or codec acceptance.
+8. Record APK sizes in the IzzyOnDroid draft. Verify both checksums from `dist/android`, then tag the exact reviewed and tested commit. Integrating other app-source changes after validation requires rebuilding and repeating the checks. The parent performs publication:
+
+   ```sh
+   (cd dist/android && shasum -a 256 -c SHA256SUMS)
+   git tag v0.3.0 "$RELEASE_COMMIT"
+   TAG_COMMIT=$(git rev-parse 'v0.3.0^{commit}')
+   ```
+
+   In the **submitted fdroiddata file** `metadata/com.evb.folderplayer.yml`, replace exactly `Builds[0].commit` (`commit: RELEASE_TAG_COMMIT` in the repository recipe) with the full value of `$TAG_COMMIT`. This avoids a self-referential commit hash in the tagged app tree. Do not move the tag or create a new app commit merely to embed its own hash. The release script already uses this hash for local builds. Keep the public `Repo`, `Binaries`, and `AllowedAPKSigningKeys` unchanged in submitted metadata. Run `fdroid lint com.evb.folderplayer`, `fdroid rewritemeta com.evb.folderplayer` and review that submitted file.
+
+   ```sh
+   git push origin main
+   git push origin v0.3.0
+   gh release create v0.3.0 --repo evb0110/evb-folder-player --title 'EVB Folder Player 0.3.0' --notes-file fastlane/metadata/android/en-US/changelogs/3.txt dist/android/EVB-Folder-Player-0.3.0-arm64-v8a.apk dist/android/EVB-Folder-Player-0.3.0-armeabi-v7a.apk dist/android/SHA256SUMS
+   ```
+
+9. Follow [store-submissions.md](store-submissions.md). F-Droid's Binaries URL points to the signed arm64 GitHub asset. Once accepted, IzzyOnDroid pulls the GitHub APK and F-Droid rebuilds tags and publishes the verified upstream APK with the developer signature. Monitor both stores; a GitHub release does not mean store publication.
+
+Back up the existing ignored `.credentials/` directory securely. Never commit it or attach it to a release. Losing the key prevents compatible updates. Existing GitHub 0.2.0 installs can update to 0.3.0 without uninstalling or losing their listening journal.

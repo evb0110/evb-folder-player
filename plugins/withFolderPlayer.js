@@ -48,12 +48,13 @@ android {
     universalApk = false
   }
 }
-def fpSigningFile = rootProject.file('../.credentials/signing.properties')
+def fpCredentialsDir = System.getenv('FOLDER_PLAYER_CREDENTIALS_DIR') ?: rootProject.file('../.credentials').absolutePath
+def fpSigningFile = new File(fpCredentialsDir, 'signing.properties')
 if (fpSigningFile.exists()) {
   def fpSigning = new Properties()
   fpSigning.load(new FileInputStream(fpSigningFile))
   android.signingConfigs.create('personalRelease') {
-    storeFile rootProject.file('../.credentials/release.keystore')
+    storeFile new File(fpCredentialsDir, 'release.keystore')
     storePassword fpSigning['storePassword']
     keyAlias fpSigning['keyAlias']
     keyPassword fpSigning['keyPassword']

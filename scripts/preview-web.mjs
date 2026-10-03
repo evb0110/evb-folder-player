@@ -65,4 +65,4 @@ http
       res.end('Not found');
     }
   })
-  .listen(port, '127.0.0.1', () => console.log(`Folder Player preview on 127.0.0.1:${port}`));
+  .listen(port, '127.0.0.1', () => console.log(`EVB Folder Player preview on 127.0.0.1:${port}`));

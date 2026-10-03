@@ -1,4 +1,4 @@
-Listen to audiobooks already on your Android device. Choose an audio folder, including subfolders, or scan indexed device audio. Folder Player works offline with no accounts, ads, analytics, or tracking. Your audio files are never modified, moved, renamed, or deleted.
+Listen to audiobooks already on your Android device. Choose an audio folder, including subfolders, or scan indexed device audio. EVB Folder Player works offline with no accounts, ads, analytics, or tracking. Your audio files are never modified, moved, renamed, or deleted.
 
 Browse books and folders with natural filename ordering. Keep an independent listening position for each folder and resume your current book from the library or headphones.
 
