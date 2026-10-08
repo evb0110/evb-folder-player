@@ -14,8 +14,8 @@ Binaries:
   https://github.com/evb0110/evb-folder-player/releases/download/v%v/EVB-Folder-Player-%v-arm64-v8a.apk
 
 Builds:
-  - versionName: 0.3.1
-    versionCode: 4
+  - versionName: 0.3.2
+    versionCode: 5
     commit: 407feda7ec40542cfdad7214b5b32d5e2fb82f6f
     sudo:
       - apt-get update
@@ -67,5 +67,5 @@ AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
 UpdateCheckName: Ignore
 UpdateCheckData: app.json|"versionCode":\s*(\d+)|.|"version":\s*"([^"]+)"
-CurrentVersion: 0.3.1
-CurrentVersionCode: 4
+CurrentVersion: 0.3.2
+CurrentVersionCode: 5

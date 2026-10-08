@@ -43,7 +43,8 @@ class FolderScanner(private val context: Context) {
       cursor.use { c ->
         while (c.moveToNext()) {
           val docId = c.getString(0); val title = c.getString(1); val mime = c.getString(2) ?: ""
-          if (mime == DocumentsContract.Document.MIME_TYPE_DIR) folders.add(docId to title)
+          // Unfinished archive imports live in hidden folders until every file is written.
+          if (mime == DocumentsContract.Document.MIME_TYPE_DIR) { if (!title.startsWith(ArchiveImporter.TEMP_PREFIX)) folders.add(docId to title) }
           else if (mime.startsWith("audio/") || title.substringAfterLast('.').lowercase() in extensions) {
             val uri = DocumentsContract.buildDocumentUriUsingTree(tree, docId).toString()
             tracks.add(JSONObject().put("id", uri).put("uri", uri).put("name", title).put("title", title.substringBeforeLast('.')).put("duration", 0))
@@ -54,11 +55,13 @@ class FolderScanner(private val context: Context) {
       if (tracks.isNotEmpty()) result.add(JSONObject().put("id", DocumentsContract.buildDocumentUriUsingTree(tree, id).toString()).put("root", tree.toString()).put("name", name).put("path", path).put("tracks", JSONArray(tracks)))
       folders.sortedWith { a, b -> NaturalOrder.compare(a.second, b.second) }.forEach { (childId, childName) -> visit(childId, "$path/$childName", childName) }
     }
-    val id = DocumentsContract.getTreeDocumentId(tree)
-    val rootUri = DocumentsContract.buildDocumentUriUsingTree(tree, id)
-    val name = resolver.query(rootUri, arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME), null, null, null)?.use { if(it.moveToFirst()) it.getString(0) else null } ?: "Audiobooks"
-    visit(id, name, name)
+    val name = rootName(tree)
+    visit(DocumentsContract.getTreeDocumentId(tree), name, name)
     return result
+  }
+  fun rootName(tree: Uri): String {
+    val rootUri = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
+    return resolver.query(rootUri, arrayOf(DocumentsContract.Document.COLUMN_DISPLAY_NAME), null, null, null)?.use { if(it.moveToFirst()) it.getString(0) else null } ?: "Audiobooks"
   }
   fun scanDevice(): List<JSONObject> {
     val grouped = linkedMapOf<String, MutableList<JSONObject>>()

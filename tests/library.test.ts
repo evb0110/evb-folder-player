@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { clockTime, folderChildren, naturalCompare, parentFolder, percent } from '../src/player/format.ts';
 import { bookPlayback, sleepMinutesLeft } from '../src/player/playback.ts';
+import { importSummary } from '../src/player/importText.ts';
 import type { IBook } from '../src/player/types.ts';
 const book = (path: string): IBook => ({ id: path, root: 'test', path, name: path.split('/').at(-1)!, tracks: [] });
 test('numeric filenames play in chapter order, including numbers larger than machine integers', () => {
@@ -80,4 +81,21 @@ test('sleep timer rounds remaining minutes up and reports zero when off', () => 
   assert.equal(sleepMinutesLeft(undefined, 0), 0);
   assert.equal(sleepMinutesLeft(90_001, 0), 2);
   assert.equal(sleepMinutesLeft(1000, 5000), 0);
+});
+
+test('import banner explains where the archive went', () => {
+  const base = { id: 1, name: 'Book.zip', folder: 'Book', destination: 'Audiobooks' };
+  assert.equal(importSummary({ ...base, state: 'running', progress: 0.426 }).text, '43% unpacked');
+  assert.equal(importSummary({ ...base, state: 'running', progress: -1 }).text, 'Unpacking…');
+  assert.equal(
+    importSummary({ ...base, state: 'done', archive: 'deleted' }).text,
+    'Saved in Audiobooks. The archive was deleted.',
+  );
+  assert.match(importSummary({ ...base, state: 'done', archive: 'kept', source: 'telegram' }).text, /Telegram keeps/);
+  assert.match(
+    importSummary({ ...base, state: 'done', archive: 'kept', source: 'downloads' }).text,
+    /still in Downloads/,
+  );
+  assert.match(importSummary({ ...base, state: 'done', archive: 'kept', source: 'other' }).text, /was kept/);
+  assert.equal(importSummary({ ...base, state: 'failed', message: 'Damaged.' }).text, 'Damaged.');
 });

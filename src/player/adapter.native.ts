@@ -12,6 +12,10 @@ interface INativeAudio {
   scanDevice(): Promise<number>;
   rescan(): Promise<boolean>;
   addSample(data: string): Promise<boolean>;
+  getImportFolder(): Promise<string | null>;
+  cancelImport(): Promise<void>;
+  dismissImport(): Promise<void>;
+  openDownloads(): Promise<void>;
 }
 
 const native = requireNativeModule<INativeAudio>('FolderAudio');
@@ -47,4 +51,8 @@ export const player: IPlayerAdapter = {
   },
   rescan: () => native.rescan(),
   addSample: book => native.addSample(JSON.stringify(book)),
+  getImportFolder: () => native.getImportFolder(),
+  cancelImport: () => native.cancelImport(),
+  dismissImport: () => native.dismissImport(),
+  openDownloads: () => native.openDownloads(),
 };

@@ -1,6 +1,7 @@
 package com.evb.folderaudio
 
 import android.app.Activity
+import android.app.DownloadManager
 import android.content.Intent
 import android.net.Uri
 import androidx.media3.common.util.UnstableApi
@@ -28,7 +29,8 @@ class FolderAudioModule : Module() {
     AsyncFunction("getHistory") { store.history().toString() }
     AsyncFunction("getStatus") {
       (PlaybackService.instance?.status() ?: store.current().put("playing", false).put("loading", false)
-        .put("speed", store.read("speed", "1.0").toDouble()).put("canUndo", store.undoPoint() != null)).toString()
+        .put("speed", store.read("speed", "1.0").toDouble()).put("canUndo", store.undoPoint() != null))
+        .put("import", ImportService.snapshot()).toString()
     }.runOnQueue(Queues.MAIN)
     AsyncFunction("command") { action: String, data: String ->
       PlaybackService.dispatch(context, action, JSONObject(data))
@@ -41,7 +43,7 @@ class FolderAudioModule : Module() {
         if (activity == null) promise.reject("NO_ACTIVITY", "Open the app before choosing a folder", null)
         else {
           pendingPicker = promise
-          activity.startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or Intent.FLAG_GRANT_PREFIX_URI_PERMISSION), 4201)
+          activity.startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or Intent.FLAG_GRANT_PREFIX_URI_PERMISSION), 4201)
         }
       }
     }.runOnQueue(Queues.MAIN)
@@ -52,7 +54,8 @@ class FolderAudioModule : Module() {
         if (payload.resultCode != Activity.RESULT_OK || uri == null) promise?.resolve(false)
         else {
           try {
-            context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            // Write access lets opened archives be unpacked into the newest library folder.
+            if (ImportFolder.retain(context, uri, payload.data?.flags ?: 0)) store.write("importRoot", uri.toString())
             scanner.execute {
               try {
                 val books = FolderScanner(context.applicationContext).scanTree(uri)
@@ -81,6 +84,15 @@ class FolderAudioModule : Module() {
       }
       if (failures.isNotEmpty()) throw IllegalStateException(failures.joinToString("\n"))
       true
+    }
+    AsyncFunction("getImportFolder") {
+      ImportFolder.find(context, store)?.let { root -> runCatching { FolderScanner(context.applicationContext).rootName(Uri.parse(root)) }.getOrNull() }
+    }
+    AsyncFunction("cancelImport") { ImportService.cancel() }
+    AsyncFunction("dismissImport") { ImportService.dismiss() }
+    AsyncFunction("openDownloads") {
+      // The system file manager's Downloads view, where a downloaded archive can be deleted.
+      context.startActivity(Intent(DownloadManager.ACTION_VIEW_DOWNLOADS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
     AsyncFunction("addSample") { data: String ->
       val book = JSONObject(data)

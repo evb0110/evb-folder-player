@@ -3,7 +3,8 @@
 A private, offline Android audiobook player built with Expo 57, React Native, and a local Kotlin/Media3 module.
 
 - Read existing audio folders, including subfolders, with Android's folder picker. Optionally discover indexed device audio.
-- Browse folders or books with natural filename ordering. Files are never moved, renamed, or deleted.
+- Add a book from a ZIP archive: open it with EVB Folder Player from Telegram, a browser download, or a file manager, or share it to the app. It is unpacked into a new folder inside your audiobook folder, including Windows archives with Cyrillic names, and appears in the library. The archive is deleted only when the app that shared it allows that.
+- Browse folders or books with natural filename ordering. Existing files are never moved, renamed, or deleted.
 - Keep independent listening positions for each folder. Resume the current book from the library or headphones.
 - Save durable progress every five seconds during playback and immediately on pause. Retain 400 history entries, checkpoints before jumps, bookmarks, and undo.
 - Open straight into the current book. Choose a chapter, then switch to car mode: a large play/pause, separate ±20-second controls, optional screen wake lock, and portrait/landscape layouts. Car mode covers the player, so the chapter list keeps its place.
@@ -22,7 +23,7 @@ IzzyOnDroid: submission pending. F-Droid: submission pending.
 
 [Obtainium](https://github.com/ImranR98/Obtainium) can check for updates from the GitHub Releases URL above. Select the APK for your phone's architecture. Install updates over the existing app to keep your library and listening history.
 
-Read the [privacy policy](PRIVACY.md). EVB Folder Player has no network access, ads, or tracking; your audio files are never modified.
+Read the [privacy policy](PRIVACY.md). EVB Folder Player has no network access, ads, or tracking; your existing audio files are never modified.
 
 ## Development
 
@@ -78,6 +79,8 @@ Instrumentation exercises actual Media3 playback, SQLite reopen, rescan preserva
 ## Implementation
 
 `modules/folder-audio` owns the Android player, media session, folder discovery, and SQLite state. React screens only issue commands and observe state. The service can run and persist progress without JavaScript. Checkpoints are committed before discontinuities. Restoration validates the resulting seek before replacing the previous saved position. Library refreshes retain listening history even when files disappear.
+
+Opened ZIP archives go to `ImportActivity`, which asks once for a writable library folder, then to `ImportService`, a foreground service that streams the archive through `ZipReader` without a seekable copy. `ArchiveImporter` writes into a hidden `.evb-import-*` folder and renames it into place only after every file is verified, so failed or cancelled imports leave nothing behind. Names without the ZIP UTF-8 flag are decoded as UTF-8 when valid, otherwise as DOS code page 866 or 437. The JVM tests in `ArchiveImporterTest` cover these cases.
 
 A sudden process kill can lose a few seconds since the last periodic checkpoint. Android Force stop intentionally prevents background execution until reopening the app. Physical headset mapping, long-idle behavior under the phone's power manager, and codec/seek behavior on the user's files still require real-device acceptance.
 

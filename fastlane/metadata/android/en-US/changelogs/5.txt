@@ -1,0 +1,1 @@
+Open a ZIP archive of audio files from Telegram, a browser download, or a file manager, or share it to the app. It is unpacked into a new folder in your audiobook folder and appears in the library. Windows archives with Cyrillic file names keep their names. Failed or cancelled imports leave nothing behind.

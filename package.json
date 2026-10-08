@@ -2,7 +2,7 @@
   "name": "evb-folder-player",
   "description": "A private, offline audiobook player with recoverable progress and large controls.",
   "private": true,
-  "version": "0.3.1",
+  "version": "0.3.2",
   "main": "index.ts",
   "dependencies": {
     "@expo-google-fonts/dm-sans": "^0.4.2",

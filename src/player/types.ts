@@ -33,6 +33,22 @@ export interface IHistoryEntry extends IPoint {
   undone?: boolean;
 }
 
+/** A ZIP archive opened with the app, unpacked by the native import service. */
+export interface IImport {
+  id: number;
+  state: 'running' | 'done' | 'failed' | 'cancelled';
+  name: string;
+  /** 0 to 1, or -1 when the archive size is unknown. */
+  progress?: number;
+  folder?: string;
+  destination?: string;
+  bookId?: string | null;
+  /** Deleted only when the app that shared it allowed writing; otherwise it stays with its source. */
+  archive?: 'deleted' | 'kept';
+  source?: 'telegram' | 'downloads' | 'other';
+  message?: string;
+}
+
 export interface IStatus extends Partial<IPoint> {
   playing: boolean;
   loading: boolean;
@@ -40,6 +56,7 @@ export interface IStatus extends Partial<IPoint> {
   canUndo: boolean;
   sleepAt?: number;
   error?: string | null;
+  import?: IImport | null;
 }
 
 export type TImportMethod = 'folder' | 'device' | 'rescan' | 'sample';
@@ -62,4 +79,9 @@ export interface IPlayerAdapter {
   scanDevice(): Promise<number>;
   rescan(): Promise<boolean>;
   addSample(book: IBook): Promise<boolean>;
+  getImportFolder(): Promise<string | null>;
+  cancelImport(): Promise<void>;
+  dismissImport(): Promise<void>;
+  /** Opens the system Downloads view, where a downloaded archive can be deleted. */
+  openDownloads(): Promise<void>;
 }

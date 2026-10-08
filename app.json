@@ -2,17 +2,18 @@
   "expo": {
     "name": "EVB Folder Player",
     "slug": "evb-folder-player",
-    "version": "0.3.1",
+    "version": "0.3.2",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#101918",
     "android": {
       "package": "com.evb.folderplayer",
-      "versionCode": 4,
+      "versionCode": 5,
       "permissions": [
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+        "FOREGROUND_SERVICE_DATA_SYNC",
         "WAKE_LOCK",
         "READ_MEDIA_AUDIO",
         "READ_EXTERNAL_STORAGE"

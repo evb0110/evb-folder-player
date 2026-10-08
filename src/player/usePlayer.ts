@@ -24,7 +24,9 @@ export function usePlayer() {
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [importFolder, setImportFolder] = useState<string | null>(null);
   const mounted = useRef(true);
+  const finishedImport = useRef<number | null>(null);
 
   const updateStatus = useCallback((next: IStatus) => {
     setStatus(current => (sameStatus(current, next) ? current : next));
@@ -35,11 +37,17 @@ export function usePlayer() {
   }, []);
 
   const refresh = useCallback(async () => {
-    const [library, state, journal] = await Promise.all([player.getLibrary(), player.getStatus(), player.getHistory()]);
+    const [library, state, journal, folder] = await Promise.all([
+      player.getLibrary(),
+      player.getStatus(),
+      player.getHistory(),
+      player.getImportFolder(),
+    ]);
     if (!mounted.current) return;
     setBooks(sortedBooks(library));
     updateStatus(state);
     setHistory(journal);
+    setImportFolder(folder);
     setReady(true);
   }, [updateStatus]);
 
@@ -105,9 +113,44 @@ export function usePlayer() {
     [refresh, report],
   );
 
+  // A finished import adds books on the native side; reload the library once.
+  const job = status.import;
+  useEffect(() => {
+    if (job?.state !== 'done' || finishedImport.current === job.id) return;
+    finishedImport.current = job.id;
+    refresh().catch(report);
+  }, [job, refresh, report]);
+
+  const importAction = useCallback(
+    async (action: 'cancel' | 'dismiss' | 'openDownloads') => {
+      try {
+        if (action === 'cancel') await player.cancelImport();
+        if (action === 'dismiss') await player.dismissImport();
+        if (action === 'openDownloads') await player.openDownloads();
+        updateStatus(await player.getStatus());
+      } catch (error) {
+        report(error);
+      }
+    },
+    [report, updateStatus],
+  );
+
   const dismissMessage = useCallback(() => setMessage(null), []);
 
-  return { ready, books, status, history, busy, message, dismissMessage, refresh, command, importBooks };
+  return {
+    ready,
+    books,
+    status,
+    history,
+    busy,
+    message,
+    importFolder,
+    dismissMessage,
+    refresh,
+    command,
+    importBooks,
+    importAction,
+  };
 }
 
 export type TPlayerModel = ReturnType<typeof usePlayer>;

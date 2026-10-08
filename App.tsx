@@ -22,6 +22,7 @@ import { HistoryScreen } from './src/components/HistoryScreen';
 import { CarMode } from './src/components/CarMode';
 import { MiniPlayer } from './src/components/MiniPlayer';
 import { Icon } from './src/components/Icon';
+import { ImportBanner } from './src/components/ImportBanner';
 
 type TScreen = 'library' | 'player' | 'history';
 
@@ -102,6 +103,18 @@ function PlayerApp() {
       <StatusBar style={dark ? 'light' : 'dark'} />
       <Frame style={[s.app, carMode && s.carApp, phone && [s.phone, phone]]}>
         {error ? <ErrorBanner text={error} onDismiss={model.message ? model.dismissMessage : undefined} /> : null}
+        {status.import && !carMode ? (
+          <ImportBanner
+            job={status.import}
+            onOpen={bookId => {
+              void model.importAction('dismiss');
+              openBook(bookId);
+            }}
+            onCancel={() => void model.importAction('cancel')}
+            onDismiss={() => void model.importAction('dismiss')}
+            onOpenDownloads={() => void model.importAction('openDownloads')}
+          />
+        ) : null}
         <View style={s.main}>
           {/* Car mode covers the player instead of replacing it, so the chapter list keeps its place. */}
           <View style={s.main} aria-hidden={carMode}>
@@ -110,6 +123,7 @@ function PlayerApp() {
                 books={model.books}
                 status={status}
                 busy={model.busy}
+                importFolder={model.importFolder}
                 onImport={method => void model.importBooks(method)}
                 onBook={book => openBook(book.id)}
                 onHistory={openHistory}

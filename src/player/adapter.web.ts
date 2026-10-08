@@ -255,6 +255,13 @@ export const player: IPlayerAdapter = {
     write();
     return true;
   },
+  // Opening archives with the app is an Android feature.
+  async getImportFolder() {
+    return null;
+  },
+  async cancelImport() {},
+  async dismissImport() {},
+  async openDownloads() {},
 };
 
 // Headset next/previous are ignored on purpose; only natural chapter completion advances.

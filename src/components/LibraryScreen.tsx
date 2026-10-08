@@ -21,12 +21,13 @@ interface IProps {
   books: IBook[];
   status: IStatus;
   busy: boolean;
+  importFolder: string | null;
   onImport: (method: TImportMethod) => void;
   onBook: (book: IBook) => void;
   onHistory: () => void;
 }
 
-export function LibraryScreen({ books, status, busy, onImport, onBook, onHistory }: IProps) {
+export function LibraryScreen({ books, status, busy, importFolder, onImport, onBook, onHistory }: IProps) {
   const { colors } = useTheme();
   const s = useStyles();
   const [query, setQuery] = useState('');
@@ -73,6 +74,13 @@ export function LibraryScreen({ books, status, busy, onImport, onBook, onHistory
                 onPress={() => onImport('folder')}
               />
               <Action icon="search" label="Scan device audio" disabled={busy} onPress={() => onImport('device')} />
+              {Platform.OS === 'web' ? null : (
+                <Text style={s.panelNote}>
+                  {importFolder
+                    ? `To add a ZIP of audio files from Telegram or a download, open it with EVB Folder Player. It is unpacked into “${importFolder}”.`
+                    : 'To add a ZIP of audio files from Telegram or a download, open it with EVB Folder Player. You choose the folder it is unpacked into.'}
+                </Text>
+              )}
             </View>
           ) : null}
         </View>
@@ -232,6 +240,7 @@ const useStyles = createThemedStyles(colors =>
     screen: { flex: 1 },
     panels: { paddingHorizontal: 20, paddingBottom: 8 },
     addPanel: { backgroundColor: colors.surface, borderRadius: 20, padding: 14, marginTop: 8, gap: 10 },
+    panelNote: { color: colors.muted, fontFamily: fonts.regular, fontSize: 13, lineHeight: 18, paddingHorizontal: 4 },
     busy: { flexDirection: 'row', gap: 12, paddingVertical: 18, alignItems: 'center' },
     busyText: { color: colors.muted, fontFamily: fonts.regular, fontSize: 14 },
     note: { color: colors.subtle, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
