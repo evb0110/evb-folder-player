@@ -29,7 +29,8 @@ class FolderAudioModule : Module() {
     AsyncFunction("getHistory") { store.history().toString() }
     AsyncFunction("getStatus") {
       (PlaybackService.instance?.status() ?: store.current().put("playing", false).put("loading", false)
-        .put("speed", store.read("speed", "1.0").toDouble()).put("canUndo", store.undoPoint() != null))
+        .put("speed", store.read("speed", "1.0").toDouble()).put("boost", store.read("boost", "0").toIntOrNull() ?: 0)
+        .put("canUndo", store.undoPoint() != null))
         .put("import", ImportService.snapshot()).toString()
     }.runOnQueue(Queues.MAIN)
     AsyncFunction("command") { action: String, data: String ->

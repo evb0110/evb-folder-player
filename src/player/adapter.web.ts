@@ -9,6 +9,7 @@ interface IWebData {
   positions: Record<string, IPoint>;
   history: IHistoryEntry[];
   speed: number;
+  boost?: number;
 }
 
 const STORAGE_KEY = 'folder-player-v1';
@@ -39,6 +40,8 @@ let sleepAt = 0;
 let changing = false;
 let pendingPlay = false;
 let nextHistoryId = Math.max(Date.now(), ...data.history.map(item => item.id + 1));
+let boostContext: AudioContext | undefined;
+let boostGain: GainNode | undefined;
 
 function write() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -90,6 +93,23 @@ function load(book: IBook, trackId: string, position: number, play: boolean) {
   changing = false;
 }
 
+/**
+ * Routes the audio through Web Audio only once a boost is chosen: a gain above the element's maximum
+ * volume, then a limiter in place of Android's loudness enhancer. Runs for user commands, because a
+ * browser starts an audio context only after a gesture.
+ */
+function applyBoost() {
+  if (!data.boost && !boostContext) return;
+  if (!boostContext || !boostGain) {
+    boostContext = new AudioContext();
+    const limiter = new DynamicsCompressorNode(boostContext, { threshold: -3, knee: 0, ratio: 20, attack: 0.003 });
+    boostGain = new GainNode(boostContext);
+    boostContext.createMediaElementSource(audio).connect(boostGain).connect(limiter).connect(boostContext.destination);
+  }
+  boostGain.gain.value = 10 ** ((data.boost ?? 0) / 20);
+  void boostContext.resume();
+}
+
 function finishRestore() {
   if (!loading || audio.readyState < 1) return;
   if (Math.abs(audio.currentTime * 1000 - intendedPosition) > RESTORE_TOLERANCE_MS) return;
@@ -128,6 +148,8 @@ function findBook(id: string, missing: string) {
 }
 
 async function runCommand(command: TCommand) {
+  if (command.action === 'boost') data.boost = command.boost;
+  applyBoost();
   switch (command.action) {
     case 'open': {
       const book = findBook(command.bookId, 'Folder not found.');
@@ -188,6 +210,8 @@ async function runCommand(command: TCommand) {
       data.speed = command.speed;
       audio.playbackRate = data.speed;
       return write();
+    case 'boost':
+      return write();
     case 'sleep':
       sleepAt = command.minutes ? Date.now() + command.minutes * 60_000 : 0;
       return;
@@ -233,6 +257,7 @@ export const player: IPlayerAdapter = {
       playing: !audio.paused && !audio.ended,
       loading,
       speed: data.speed,
+      boost: data.boost ?? 0,
       error,
       sleepAt,
       canUndo: !!undoPoint(),

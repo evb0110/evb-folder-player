@@ -52,7 +52,7 @@ test('a loaded book reports live playback; others report saved progress', () => 
     duration: 0,
   };
   const shelf: IBook = { id: 'x', root: 'test', name: 'X', path: 'X', tracks, progress: saved };
-  const idle = { playing: false, loading: false, speed: 1, canUndo: false };
+  const idle = { playing: false, loading: false, speed: 1, boost: 0, canUndo: false };
 
   const fromSaved = bookPlayback(shelf, { ...idle, bookId: 'other', playing: true });
   assert.deepEqual(

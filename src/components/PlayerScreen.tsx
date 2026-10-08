@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react
 import { useLandscape } from '../frame';
 import { createThemedStyles, fonts, touch, useTheme } from '../theme';
 import { clockTime } from '../player/format';
-import { bookPlayback, sleepMinutesLeft, SLEEP_MINUTES, SPEEDS, type IBookPlayback } from '../player/playback';
+import { BOOSTS, bookPlayback, sleepMinutesLeft, SLEEP_MINUTES, SPEEDS, type IBookPlayback } from '../player/playback';
 import type { TRunCommand } from '../player/usePlayer';
 import type { IBook, IStatus, ITrack } from '../player/types';
 import { IconButton, Segmented } from './Controls';
@@ -79,6 +79,8 @@ export function PlayerScreen({ book, status, tab, onTab, onBack, onCarMode, onHi
   );
 }
 
+type TMenu = 'speed' | 'boost' | 'sleep';
+
 interface ITransportActions {
   toggle: () => void;
   skip: (delta: number) => void;
@@ -100,7 +102,7 @@ function ListenView({ book, status, playback, controls, command, onChapters, onH
   const { colors } = useTheme();
   const s = useStyles();
   const landscape = useLandscape();
-  const [menu, setMenu] = useState<'speed' | 'sleep' | null>(null);
+  const [menu, setMenu] = useState<TMenu | null>(null);
   const [area, setArea] = useState({ width: 0, height: 0 });
   const [titlesHeight, setTitlesHeight] = useState(0);
   const sleepLeft = sleepMinutesLeft(status.sleepAt);
@@ -114,7 +116,7 @@ function ListenView({ book, status, playback, controls, command, onChapters, onH
   );
   const coverSize = titlesHeight && fittedCover >= 76 ? Math.floor(fittedCover) : 0;
 
-  const toggleMenu = (next: 'speed' | 'sleep') => setMenu(current => (current === next ? null : next));
+  const toggleMenu = (next: TMenu) => setMenu(current => (current === next ? null : next));
 
   return (
     <View style={[s.listen, landscape && s.listenLandscape]}>
@@ -173,6 +175,18 @@ function ListenView({ book, status, playback, controls, command, onChapters, onH
             }}
           />
         ) : null}
+        {menu === 'boost' ? (
+          <Segmented
+            fill
+            style={s.menu}
+            options={BOOSTS.map(value => ({ value, label: value ? `+${value} dB` : 'Off' }))}
+            value={status.boost}
+            onChange={boost => {
+              void command({ action: 'boost', boost });
+              setMenu(null);
+            }}
+          />
+        ) : null}
         {menu === 'sleep' ? (
           <Segmented
             fill
@@ -191,6 +205,13 @@ function ListenView({ book, status, playback, controls, command, onChapters, onH
             text={`${status.speed || 1}×`}
             active={menu === 'speed'}
             onPress={() => toggleMenu('speed')}
+          />
+          <Tool
+            label={status.boost ? `+${status.boost} dB` : 'Boost'}
+            accessibilityLabel="Volume boost"
+            icon="volume"
+            active={menu === 'boost' || !!status.boost}
+            onPress={() => toggleMenu('boost')}
           />
           <Tool
             label={sleepLeft ? `${sleepLeft} min` : 'Sleep'}

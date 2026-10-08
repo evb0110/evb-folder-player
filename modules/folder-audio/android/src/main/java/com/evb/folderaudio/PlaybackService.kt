@@ -3,6 +3,7 @@ package com.evb.folderaudio
 import android.app.PendingIntent
 import android.content.Intent
 import android.content.Context
+import android.media.audiofx.LoudnessEnhancer
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -10,6 +11,7 @@ import android.view.KeyEvent
 import androidx.media3.common.*
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.google.common.util.concurrent.Futures
@@ -43,6 +45,13 @@ class PlaybackService : MediaSessionService() {
   private var lastSave = 0L
   private var lastHeadsetToggle = 0L
   private var sleepAt = 0L
+  /** Decibels added above the system volume; 0 detaches the effect. */
+  private var boost = 0
+  /** Internal, with [audioSessionId] and [platformToken], for the instrumentation test. */
+  internal var enhancer: LoudnessEnhancer? = null
+    private set
+  internal fun audioSessionId() = player.audioSessionId
+  internal fun platformToken() = session?.platformToken
 
   override fun onCreate() {
     super.onCreate()
@@ -53,6 +62,7 @@ class PlaybackService : MediaSessionService() {
       .setWakeMode(C.WAKE_MODE_LOCAL)
       .setSeekBackIncrementMs(20000).setSeekForwardIncrementMs(20000).build()
     player.setPlaybackSpeed(store.read("speed", "1.0").toFloatOrNull()?.coerceIn(0.5f, 2.5f) ?: 1f)
+    boost = store.read("boost", "0").toIntOrNull()?.coerceIn(0, 12) ?: 0
     player.addListener(object : Player.Listener {
       override fun onPlaybackStateChanged(state: Int) {
         if (state == Player.STATE_READY && expectedPosition != null) {
@@ -83,6 +93,8 @@ class PlaybackService : MediaSessionService() {
         }
         persist()
       }
+      // ExoPlayer assigns its audio session asynchronously; the effect must follow it.
+      override fun onAudioSessionIdChanged(audioSessionId: Int) { enhancer?.release(); enhancer = null; applyBoost() }
       override fun onPlayerError(failure: PlaybackException) {
         error = "Cannot play this file. Check that it is still on your phone and that folder access is allowed. (${failure.errorCodeName})"
         // Never replace a known-good checkpoint with a failed player's zero position.
@@ -98,12 +110,19 @@ class PlaybackService : MediaSessionService() {
       override fun seekToNextMediaItem() = Unit
       override fun seekToPrevious() = Unit
       override fun seekToPreviousMediaItem() = Unit
+      // Lock-screen and notification jumps take the same path as the app's, including a seek during restore.
+      override fun seekBack() = command("skip", JSONObject().put("delta", -seekBackIncrement))
+      override fun seekForward() = command("skip", JSONObject().put("delta", seekForwardIncrement))
+      override fun seekTo(positionMs: Long) = command("seek", JSONObject().put("position", positionMs))
     }
     val builder = MediaSession.Builder(this, protectedPlayer).setCallback(object : MediaSession.Callback {
       override fun onConnect(session: MediaSession, controller: MediaSession.ControllerInfo): MediaSession.ConnectionResult {
         if (!controller.isTrusted) return MediaSession.ConnectionResult.reject()
         // The session itself needs playlist commands for cold resumption. External controllers do not.
-        val remoteCommands = protectedPlayer.availableCommands.buildUpon()
+        // The media notification controller, whose commands the lock screen also uses, can connect
+        // before a book is loaded, so grant from all commands; the player still limits them to what
+        // it can do at each moment.
+        val remoteCommands = MediaSession.ConnectionResult.DEFAULT_PLAYER_COMMANDS.buildUpon()
           .remove(Player.COMMAND_CHANGE_MEDIA_ITEMS).remove(Player.COMMAND_SET_MEDIA_ITEM).build()
         return MediaSession.ConnectionResult.AcceptedResultBuilder(session).setAvailablePlayerCommands(remoteCommands).build()
       }
@@ -134,6 +153,10 @@ class PlaybackService : MediaSessionService() {
         } catch (failure: Exception) { Futures.immediateFailedFuture(failure) }
       }
     })
+    // 20-second jumps beside play/pause on the lock screen and in the media notification.
+    builder.setMediaButtonPreferences(listOf(
+      CommandButton.Builder(CommandButton.ICON_SKIP_BACK).setPlayerCommand(Player.COMMAND_SEEK_BACK).setDisplayName("Back 20 seconds").build(),
+      CommandButton.Builder(CommandButton.ICON_SKIP_FORWARD).setPlayerCommand(Player.COMMAND_SEEK_FORWARD).setDisplayName("Forward 20 seconds").build()))
     packageManager.getLaunchIntentForPackage(packageName)?.let { launch ->
       builder.setSessionActivity(PendingIntent.getActivity(this, 0, launch, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
     }
@@ -159,6 +182,19 @@ class PlaybackService : MediaSessionService() {
       val track = tracks.getJSONObject(i)
       MediaItem.Builder().setMediaId(track.getString("id")).setUri(track.getString("uri"))
         .setMediaMetadata(MediaMetadata.Builder().setTitle(track.getString("title")).setArtist(target.getString("name")).setAlbumTitle(target.getString("name")).build()).build()
+    }
+  }
+  /** Android's loudness enhancer raises the signal above the system's maximum volume and compresses peaks that would clip. */
+  private fun applyBoost() {
+    val audioSession = player.audioSessionId
+    if (boost == 0 || audioSession == C.AUDIO_SESSION_ID_UNSET) { enhancer?.release(); enhancer = null; return }
+    try {
+      val effect = enhancer ?: LoudnessEnhancer(audioSession).also { enhancer = it }
+      effect.setTargetGain(boost * 100)
+      effect.setEnabled(true)
+    } catch (failure: RuntimeException) {
+      // A device without the effect keeps playing at system volume.
+      enhancer?.release(); enhancer = null
     }
   }
   private fun point(index: Int = player.currentMediaItemIndex, position: Long = player.currentPosition): JSONObject? {
@@ -242,6 +278,7 @@ class PlaybackService : MediaSessionService() {
           else persist("Bookmark")
         }
         "speed" -> { val speed = data.getDouble("speed").toFloat().coerceIn(0.5f, 2.5f); player.setPlaybackSpeed(speed); store.write("speed", speed.toString()) }
+        "boost" -> { boost = data.getInt("boost").coerceIn(0, 12); store.write("boost", boost.toString()); applyBoost() }
         "sleep" -> { val minutes = data.getLong("minutes"); sleepAt = if (minutes > 0) System.currentTimeMillis() + minutes * 60000 else 0 }
       }
     } catch (failure: Exception) { error = failure.message ?: "Playback could not continue." }
@@ -249,7 +286,7 @@ class PlaybackService : MediaSessionService() {
   fun status(): JSONObject {
     val current = if (expectedPosition == null && error == null) point() ?: store.current() else store.current()
     return JSONObject(current.toString()).put("playing", player.isPlaying).put("loading", expectedPosition != null && error == null)
-      .put("position", expectedPosition ?: current.optLong("position")).put("speed", player.playbackParameters.speed.toDouble())
+      .put("position", expectedPosition ?: current.optLong("position")).put("speed", player.playbackParameters.speed.toDouble()).put("boost", boost)
       .put("sleepAt", sleepAt).put("error", error ?: JSONObject.NULL).put("canUndo", store.undoPoint() != null)
   }
   override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = session
@@ -263,7 +300,7 @@ class PlaybackService : MediaSessionService() {
     persist()
     instance = null
     handler.removeCallbacksAndMessages(null)
-    session?.release(); player.release(); store.close()
+    enhancer?.release(); session?.release(); player.release(); store.close()
     super.onDestroy()
   }
 }

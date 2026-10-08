@@ -1,7 +1,10 @@
 package com.evb.folderaudio
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.media.audiofx.Visualizer
+import android.media.session.PlaybackState
 import android.os.SystemClock
 import android.view.KeyEvent
 import androidx.media3.common.util.UnstableApi
@@ -36,6 +39,30 @@ class PlaybackTest {
     fail("Timed out: $label; state=${status()}")
   }
   private fun command(action: String, data: JSONObject = JSONObject()) { main { PlaybackService.dispatch(activity, action, data) } }
+  /** The loudest RMS level, in millibels, that the player's audio session reaches over [ms]. */
+  private fun loudness(ms: Long): Int {
+    var audioSession = 0
+    main { audioSession = PlaybackService.instance!!.audioSessionId() }
+    val visualizer = Visualizer(audioSession)
+    try {
+      visualizer.setMeasurementMode(Visualizer.MEASUREMENT_MODE_PEAK_RMS)
+      visualizer.setEnabled(true)
+      val measurement = Visualizer.MeasurementPeakRms()
+      var loudest = Int.MIN_VALUE
+      val deadline = SystemClock.elapsedRealtime() + ms
+      while (SystemClock.elapsedRealtime() < deadline) {
+        SystemClock.sleep(50)
+        if (visualizer.getMeasurementPeakRms(measurement) == Visualizer.SUCCESS) loudest = maxOf(loudest, measurement.mRms)
+      }
+      return loudest
+    } finally { visualizer.release() }
+  }
+  /** A platform controller, as the lock screen and headsets use, without the system's session list permission. */
+  private fun platformController(): android.media.session.MediaController {
+    var token: android.media.session.MediaSession.Token? = null
+    main { token = PlaybackService.instance!!.platformToken() }
+    return android.media.session.MediaController(context, token!!)
+  }
   @Before fun setUp() {
     context.deleteDatabase("folder-player.db")
     store = LibraryStore(context)
@@ -84,9 +111,8 @@ class PlaybackTest {
     lateinit var future: com.google.common.util.concurrent.ListenableFuture<MediaController>
     main { future = MediaController.Builder(context, token).buildAsync() }
     val controller = future.get(10, TimeUnit.SECONDS)
-    instrumentation.uiAutomation.adoptShellPermissionIdentity("android.permission.MEDIA_CONTENT_CONTROL")
     try {
-      val platformController = context.getSystemService(android.media.session.MediaSessionManager::class.java).getActiveSessions(null).first { it.packageName == context.packageName }
+      val platformController = platformController()
       main {
         platformController.dispatchMediaButtonEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT))
         platformController.dispatchMediaButtonEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_NEXT))
@@ -96,7 +122,54 @@ class PlaybackTest {
       main { assertFalse(controller.isCommandAvailable(androidx.media3.common.Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)) }
       command("seek", JSONObject().put("position", status().getLong("duration") - 300))
       await("natural chapter progression") { status().optString("trackId") == "track-2" && status().optBoolean("playing") }
-    } finally { main { controller.release() }; instrumentation.uiAutomation.dropShellPermissionIdentity() }
+    } finally { main { controller.release() } }
+  }
+  @Test fun volumeBoostRaisesOutputAboveSystemVolumeAndPersists() {
+    instrumentation.uiAutomation.grantRuntimePermission(context.packageName, Manifest.permission.RECORD_AUDIO)
+    command("toggle")
+    await("playing") { status().optBoolean("playing") }
+    assertNull(PlaybackService.instance!!.enhancer)
+    command("seek", JSONObject().put("position", 2000))
+    val plain = loudness(2500)
+    command("boost", JSONObject().put("boost", 12))
+    command("seek", JSONObject().put("position", 2000))
+    await("boost reported") { status().optInt("boost") == 12 }
+    val boosted = loudness(2500)
+    android.util.Log.i("PlaybackTest", "Loudest RMS without and with +12 dB boost: $plain, $boosted mB")
+    assertTrue("Boost should raise the same passage by several dB: $plain -> $boosted mB", boosted - plain >= 500)
+    main { activity.stopService(Intent(activity, PlaybackService::class.java)) }
+    await("service stops") { PlaybackService.instance == null }
+    command("toggle")
+    await("boost restored with the service") {
+      val effect = PlaybackService.instance?.enhancer
+      status().optBoolean("playing") && effect != null && effect.enabled && effect.targetGain == 1200f
+    }
+    command("boost", JSONObject().put("boost", 0))
+    await("boost off detaches the effect") { status().optInt("boost", -1) == 0 && PlaybackService.instance?.enhancer == null }
+  }
+  @Test fun lockScreenJumpsTwentySecondsEvenWhenTheServiceStartedEmpty() {
+    // Start the service, and its media notification controller, before any book is loaded.
+    command("sleep", JSONObject().put("minutes", 0))
+    await("service running") { PlaybackService.instance != null }
+    SystemClock.sleep(1000)
+    command("toggle")
+    await("playing") { status().optBoolean("playing") }
+    command("pause")
+    await("paused") { !status().optBoolean("playing") }
+    val controller = platformController()
+    lateinit var state: PlaybackState
+    await("lock screen controls") {
+      state = controller.playbackState ?: return@await false
+      state.actions and PlaybackState.ACTION_SEEK_TO != 0L && state.customActions.size == 2
+    }
+    assertEquals(listOf("Back 20 seconds", "Forward 20 seconds"), state.customActions.map { it.name.toString() })
+    val before = status().getLong("position")
+    main { controller.transportControls.sendCustomAction(state.customActions[1], null) }
+    await("forward 20 seconds") { status().optLong("position") >= before + 19500 }
+    assertEquals("Before jump", store.history().getJSONObject(0).getString("reason"))
+    main { controller.transportControls.sendCustomAction(state.customActions[0], null) }
+    await("back 20 seconds") { kotlin.math.abs(status().optLong("position") - before) < 500 }
+    assertFalse(status().optBoolean("playing"))
   }
   @Test fun failedFileDoesNotOverwriteSavedPosition() {
     val broken = book("missing")

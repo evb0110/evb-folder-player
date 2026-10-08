@@ -6,7 +6,7 @@ import { sortedBooks } from './format';
 import type { IBook, IHistoryEntry, IStatus, TCommand, TImportMethod } from './types';
 
 const POLL_MS = 500;
-const initialStatus: IStatus = { playing: false, loading: false, speed: 1, canUndo: false };
+const initialStatus: IStatus = { playing: false, loading: false, speed: 1, boost: 0, canUndo: false };
 
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : String(error);

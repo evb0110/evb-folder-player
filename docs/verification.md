@@ -37,3 +37,14 @@ A task-owned Android 16 (API 36) emulator ran the signed arm64 release build. 0.
 - Sharing an archive to the app imported it. A fresh install with no library opened the picker in `Audiobooks`; the chosen folder joined the library.
 
 Android only offers a deletion confirmation for audio, video and image items, so the app cannot delete a ZIP that Telegram or a browser shared read-only. Telegram itself was not installed on the emulator; its "Open with" uses the same read-only path tested here.
+
+# Volume boost and lock-screen controls, 9 October 2026
+
+Version 0.3.3 adds a volume boost of up to 12 dB and 20-second jumps on the lock screen and in the media notification. `npm run check`, the 18 JVM tests and all nine instrumentation tests pass on task-owned Android 16 (API 36) and Android 11 (API 30) emulators.
+
+- `volumeBoostRaisesOutputAboveSystemVolumeAndPersists` measures the player's audio session with a visualizer. The same passage peaked at −47.8 dB RMS without boost and −35.8 dB with +12 dB on both Android versions. With the gain forced to zero the test fails (−47.81 to −47.83 dB). The boost survives service recreation, and Off detaches the effect.
+- `lockScreenJumpsTwentySecondsEvenWhenTheServiceStartedEmpty` starts the service before a book is loaded, then reads the platform media session that the lock screen uses: seeking and both jump actions must be present, and each jump must move the position 20 seconds and save a "Before jump" checkpoint. With the previous connection code, which granted controllers only the commands an empty player had, the test fails on both Android versions: no seeking or jump actions ever reach the platform session.
+
+A local signed arm64 release build was installed over the published 0.3.2 APK on the Android 16 emulator. On 0.3.2 the platform session offered no custom actions and no seeking; the lock screen showed only play/pause. After the in-place update the library and position remained. Boost +6 dB attached an enabled Loudness Enhancer to the app's playing track in the AudioFlinger dump. The lock screen showed back and forward buttons and a seek bar; with the screen locked, pause held the position at 22.66 s, forward moved it to 42.66 s and back to 22.66 s. Both jumps appeared in History as "Before jump", and Undo was enabled. On Android 11 the lock screen takes the same buttons from the notification: pause at 25.95 s, forward to 46.01 s, back to 26.01 s.
+
+Not yet checked on a physical phone: how loud +12 dB is through real speakers and headphones, vendor audio effects that might also process the session, and lock screens of manufacturer skins.

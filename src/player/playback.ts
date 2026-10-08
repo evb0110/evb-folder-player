@@ -2,6 +2,8 @@ import type { IBook, IStatus, ITrack } from './types.ts';
 
 export const SKIP_MS = 20_000;
 export const SPEEDS = [0.75, 1, 1.25, 1.5, 2];
+/** Decibels above the system's maximum volume. */
+export const BOOSTS = [0, 3, 6, 9, 12];
 export const SLEEP_MINUTES = [0, 15, 30, 45, 60];
 
 export interface IBookPlayback {

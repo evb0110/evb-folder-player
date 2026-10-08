@@ -53,6 +53,8 @@ export interface IStatus extends Partial<IPoint> {
   playing: boolean;
   loading: boolean;
   speed: number;
+  /** Decibels of volume boost above the system volume, 0 when off. */
+  boost: number;
   canUndo: boolean;
   sleepAt?: number;
   error?: string | null;
@@ -68,6 +70,7 @@ export type TCommand =
   | { action: 'skip'; delta: number }
   | { action: 'restore'; point: IPoint }
   | { action: 'speed'; speed: number }
+  | { action: 'boost'; boost: number }
   | { action: 'sleep'; minutes: number };
 
 export interface IPlayerAdapter {

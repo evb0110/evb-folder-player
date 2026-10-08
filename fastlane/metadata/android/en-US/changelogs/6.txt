@@ -1,0 +1,1 @@
+Volume boost: the new Boost button on the player raises quiet recordings by up to 12 dB above Android's maximum volume. The lock screen and the media notification now have 20-second back and forward buttons beside play/pause, and on Android 13 and newer the lock-screen position bar can be dragged. These jumps are saved in History and can be undone.

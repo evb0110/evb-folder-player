@@ -1,3 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Test APK only: the visualizer that measures boosted output needs it. The app never requests it. -->
+  <uses-permission android:name="android.permission.RECORD_AUDIO" />
   <application><activity android:name="com.evb.folderaudio.PlaybackTestActivity" android:exported="true" /></application>
 </manifest>
