@@ -3,8 +3,5 @@ interface IStore {
   url: string | null;
 }
 
-// Set each URL to its confirmed listing to turn its coming-soon card into a link.
-export const STORES: IStore[] = [
-  { name: 'IzzyOnDroid', url: null },
-  { name: 'F-Droid', url: null },
-];
+// Set each URL to its confirmed listing to turn its in-review card into a link.
+export const STORES: IStore[] = [{ name: 'F-Droid', url: null }];

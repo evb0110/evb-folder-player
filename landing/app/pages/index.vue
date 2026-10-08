@@ -6,41 +6,52 @@
         <img class="brand-icon" src="/icon.png" alt="" width="30" height="30" />
         <span>EVB Folder Player</span>
       </a>
-      <a class="header-link" :href="REPOSITORY_URL" aria-label="EVB Folder Player on GitHub">
+      <a class="header-link" :href="REPOSITORY_URL" v-bind="NEW_TAB" aria-label="EVB Folder Player on GitHub">
         <UIcon name="i-simple-icons-github" />
       </a>
     </header>
 
     <main id="main">
       <section class="hero" aria-labelledby="hero-title">
-        <img class="hero-icon" src="/icon.png" alt="" width="88" height="88" />
-        <p class="kicker">Offline audiobooks · Android</p>
-        <h1 id="hero-title">EVB Folder Player</h1>
-        <p class="lede">Your audiobooks. Your folders. Your place, saved.</p>
-
-        <div class="downloads">
-          <a class="download-row" :href="arm64?.url ?? RELEASES_URL">
-            <UIcon class="download-icon" name="i-lucide-download" />
-            <span class="download-copy">
-              <strong>{{ arm64 ? 'Download for Android' : 'Get it on GitHub Releases' }}</strong>
-              <small>
-                <template v-if="arm64 && release">v{{ release.version }} · {{ formatSize(arm64.size) }} · </template>
-                APK
-              </small>
-            </span>
-            <UIcon class="download-arrow" name="i-lucide-arrow-down-to-line" />
-          </a>
-          <p class="download-note">arm64-v8a · For most Android phones.</p>
-          <div class="download-links">
-            <a :href="release?.assets['armeabi-v7a']?.url ?? RELEASES_URL">Older 32-bit phones (armeabi-v7a)</a>
-            <span class="release-links">
-              <a :href="release?.assets.checksums?.url ?? RELEASES_URL">SHA256SUMS</a>
-              <span aria-hidden="true">·</span>
-              <a :href="RELEASES_URL">All releases</a>
-            </span>
-          </div>
+        <div class="hero-intro">
+          <img class="hero-icon" src="/icon.png" alt="" width="88" height="88" />
+          <p class="kicker">Offline audiobooks · Android</p>
+          <h1 id="hero-title">EVB Folder Player</h1>
+          <p class="lede">Your audiobooks. Your folders.<br />Your place, saved.</p>
         </div>
-        <p class="hero-note">Choose a folder, press play, and pick up where you left off.</p>
+
+        <div class="hero-film">
+          <FilmPlayer
+            label="EVB Folder Player playing a sample audiobook: jumping 20 seconds, choosing a chapter, car mode, the library and listening history."
+          />
+          <p class="film-caption">Recorded from the app's browser preview.</p>
+        </div>
+
+        <div class="hero-get">
+          <div class="downloads">
+            <a class="download-row" v-bind="download(arm64)">
+              <UIcon class="download-icon" name="i-lucide-download" />
+              <span class="download-copy">
+                <strong>{{ arm64 ? 'Download for Android' : 'Get it on GitHub Releases' }}</strong>
+                <small>
+                  <template v-if="arm64 && release">v{{ release.version }} · {{ formatSize(arm64.size) }} · </template>
+                  APK
+                </small>
+              </span>
+              <UIcon class="download-arrow" name="i-lucide-arrow-down-to-line" />
+            </a>
+            <p class="download-note">arm64-v8a · For most Android phones.</p>
+            <div class="download-links">
+              <a v-bind="download(release?.assets['armeabi-v7a'])">Older 32-bit phones (armeabi-v7a)</a>
+              <span class="release-links">
+                <a v-bind="download(release?.assets.checksums)">SHA256SUMS</a>
+                <span aria-hidden="true">·</span>
+                <a :href="RELEASES_URL" v-bind="NEW_TAB">All releases</a>
+              </span>
+            </div>
+          </div>
+          <p class="hero-note">Choose a folder or open a ZIP, press play, and pick up where you left off.</p>
+        </div>
       </section>
 
       <section class="screenshots" aria-labelledby="screenshots-title">
@@ -54,8 +65,12 @@
           role="region"
           aria-label="App screenshots, scroll horizontally for more"
         >
-          <figure v-for="shot in screenshots" :key="shot.id" class="screenshot">
-            <a :href="`/screenshots/${shot.id}.png`" :aria-label="`View full-size screenshot: ${shot.title}`">
+          <figure v-for="(shot, index) in screenshots" :key="shot.id" class="screenshot">
+            <a
+              :href="`/screenshots/${shot.id}.png`"
+              :aria-label="`View screenshot: ${shot.title}`"
+              @click="openShot($event, index)"
+            >
               <img
                 :src="`/screenshots/${shot.id}.png`"
                 :alt="shot.alt"
@@ -69,12 +84,61 @@
           </figure>
         </div>
         <p class="gallery-caption">Real app screenshots. Light and dark themes included.</p>
+        <UModal v-model:open="viewerOpen" fullscreen :title="shown.title" :description="shown.alt">
+          <template #content="{ close }">
+            <div class="viewer" @click.self="close" @keydown.left.prevent="step(-1)" @keydown.right.prevent="step(1)">
+              <figure class="viewer-figure">
+                <img
+                  class="viewer-image"
+                  :src="`/screenshots/${shown.id}.png`"
+                  :alt="shown.alt"
+                  width="1080"
+                  height="2400"
+                />
+                <figcaption class="viewer-caption">
+                  {{ shown.title }} <span class="viewer-count">{{ shownIndex + 1 }} / {{ screenshots.length }}</span>
+                </figcaption>
+              </figure>
+              <button
+                class="viewer-button viewer-previous"
+                type="button"
+                aria-label="Previous screenshot"
+                @click="step(-1)"
+              >
+                <UIcon name="i-lucide-chevron-left" />
+              </button>
+              <button class="viewer-button viewer-next" type="button" aria-label="Next screenshot" @click="step(1)">
+                <UIcon name="i-lucide-chevron-right" />
+              </button>
+              <button class="viewer-button viewer-close" type="button" aria-label="Close" @click="close">
+                <UIcon name="i-lucide-x" />
+              </button>
+            </div>
+          </template>
+        </UModal>
       </section>
 
       <section class="features" aria-labelledby="features-title">
         <h2 id="features-title" class="section-title">Made for listening</h2>
         <p class="section-lede">The books you already own, with a little less friction.</p>
         <div class="feature-grid">
+          <article class="feature feature-wide">
+            <div>
+              <UIcon class="feature-icon" name="i-lucide-file-archive" />
+              <h3>Books from ZIP archives</h3>
+              <p>
+                Got an audiobook as a ZIP in Telegram or your downloads? Open it with EVB Folder Player, or share it to
+                the app. It is unpacked into a new folder in your library, Windows archives with Cyrillic names
+                included. An import that fails or is cancelled leaves nothing behind.
+              </p>
+            </div>
+            <ol class="zip-steps">
+              <li v-for="zipStep in zipSteps" :key="zipStep.text" class="zip-step">
+                <UIcon class="zip-icon" :name="zipStep.icon" />
+                <span>{{ zipStep.text }}</span>
+              </li>
+            </ol>
+          </article>
           <article v-for="feature in features" :key="feature.title" class="feature">
             <UIcon class="feature-icon" :name="feature.icon" />
             <h3>{{ feature.title }}</h3>
@@ -91,7 +155,7 @@
             The Android app has no network permission. No accounts, ads, analytics or tracking. Your library, bookmarks
             and listening history stay on your device. Your audio files are never modified, moved, renamed or deleted.
           </p>
-          <a :href="`${REPOSITORY_URL}/blob/master/PRIVACY.md`"
+          <a :href="`${REPOSITORY_URL}/blob/master/PRIVACY.md`" v-bind="NEW_TAB"
             >Read the privacy policy <span aria-hidden="true">↗</span></a
           >
         </div>
@@ -113,8 +177,8 @@
             <span class="step-number" aria-hidden="true">02</span>
             <h3>Verify the download</h3>
             <p>
-              Download <a :href="release?.assets.checksums?.url ?? RELEASES_URL">SHA256SUMS</a> into the same folder as
-              the APK. Check it on your computer:
+              Download <a v-bind="download(release?.assets.checksums)">SHA256SUMS</a> into the same folder as the APK.
+              Check it on your computer:
             </p>
             <span class="command-label">macOS</span>
             <code>shasum -a 256 -c SHA256SUMS --ignore-missing</code>
@@ -126,9 +190,9 @@
             <span class="step-number" aria-hidden="true">03</span>
             <h3>Keep up to date</h3>
             <p>
-              Add the <a :href="RELEASES_URL">GitHub Releases URL</a> to
-              <a href="https://github.com/ImranR98/Obtainium">Obtainium</a> and select the APK for your phone's
-              architecture. Install updates over the existing app to keep your library and history.
+              Add the <a :href="RELEASES_URL" v-bind="NEW_TAB">GitHub Releases URL</a> to
+              <a href="https://github.com/ImranR98/Obtainium" v-bind="NEW_TAB">Obtainium</a> and select the APK for your
+              phone's architecture. Install updates over the existing app to keep your library and history.
             </p>
             <p>Clearing app storage or uninstalling removes saved progress, leaving your audio files untouched.</p>
           </li>
@@ -137,7 +201,7 @@
 
       <section class="stores" aria-labelledby="stores-title">
         <h2 id="stores-title" class="section-title">More ways to install, soon</h2>
-        <p class="section-lede">Store submissions are in progress. For now, download from GitHub.</p>
+        <p class="section-lede">An F-Droid submission is in review. For now, download from GitHub.</p>
         <div class="store-grid">
           <component
             :is="store.url ? 'a' : 'div'"
@@ -145,29 +209,33 @@
             :key="store.name"
             class="store"
             :href="store.url ?? undefined"
+            v-bind="store.url ? NEW_TAB : {}"
           >
             <UIcon name="i-lucide-package" />
             <span class="store-name">{{ store.name }}</span>
-            <span class="store-status">{{ store.url ? 'View listing ↗' : 'Coming soon' }}</span>
+            <span class="store-status">{{ store.url ? 'View listing ↗' : 'In review' }}</span>
           </component>
         </div>
       </section>
     </main>
 
     <footer class="site-footer">
-      <span>© 2026 Eugene Barsky</span>
+      <span>© 2026 <a class="author" href="https://evb-stack.com/" v-bind="NEW_TAB">Eugene Barsky</a></span>
       <nav aria-label="Project links">
-        <a :href="REPOSITORY_URL">Source code</a>
-        <a :href="`${REPOSITORY_URL}/issues`">Issues</a>
-        <a :href="`${REPOSITORY_URL}/blob/master/LICENSE`">MIT License</a>
+        <a :href="REPOSITORY_URL" v-bind="NEW_TAB">Source code</a>
+        <a :href="`${REPOSITORY_URL}/issues`" v-bind="NEW_TAB">Issues</a>
+        <a :href="`${REPOSITORY_URL}/blob/master/LICENSE`" v-bind="NEW_TAB">MIT License</a>
       </nav>
     </footer>
   </div>
 </template>
 
 <script setup lang="ts">
-import { RELEASES_URL, REPOSITORY_URL, type ILatestRelease } from '#shared/release';
+import { RELEASES_URL, REPOSITORY_URL, type IReleaseAsset, type ILatestRelease } from '#shared/release';
 import { STORES } from '#shared/site';
+
+/** Pages on other sites open in a new tab, so the landing stays open. */
+const NEW_TAB = { target: '_blank', rel: 'noopener noreferrer' };
 
 const screenshots = [
   {
@@ -200,6 +268,12 @@ const screenshots = [
     title: 'Find your place again',
     alt: 'Dark-themed listening history with All and Bookmarks tabs, an Undo button, a saved bookmark and earlier listening positions.',
   },
+];
+
+const zipSteps = [
+  { icon: 'i-lucide-send', text: 'Open the ZIP from Telegram, a download or a file manager.' },
+  { icon: 'i-lucide-folder-input', text: 'Choose EVB Folder Player. The first time, pick the folder for new books.' },
+  { icon: 'i-lucide-book-open', text: 'Open the book as soon as it is unpacked.' },
 ];
 
 const features = [
@@ -235,8 +309,31 @@ const features = [
   },
 ];
 
+const viewerOpen = ref(false);
+const shownIndex = ref(0);
+const shown = computed(() => screenshots[shownIndex.value]!);
+
+/** Opens the screenshot viewer; modified clicks keep the browser's own behaviour, such as a new tab. */
+function openShot(event: MouseEvent, index: number) {
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+    return;
+  }
+  event.preventDefault();
+  shownIndex.value = index;
+  viewerOpen.value = true;
+}
+
+function step(delta: number) {
+  shownIndex.value = (shownIndex.value + delta + screenshots.length) % screenshots.length;
+}
+
 const { data: release } = await useFetch<ILatestRelease | null>('/api/release', { default: () => null });
 const arm64 = computed(() => release.value?.assets['arm64-v8a']);
+
+/** A release asset downloads in place; without it, the releases page opens in a new tab. */
+function download(asset: IReleaseAsset | undefined) {
+  return asset ? { href: asset.url } : { href: RELEASES_URL, ...NEW_TAB };
+}
 
 function formatSize(bytes: number) {
   return `${Math.round(bytes / 1024 ** 2)} MB`;
@@ -246,7 +343,7 @@ const siteUrl = useRuntimeConfig().public.siteUrl.replace(/\/$/, '');
 useSeoMeta({
   title: 'EVB Folder Player · Offline audiobooks for Android',
   description:
-    'Listen to audiobooks from your Android folders, with saved progress, bookmarks and large controls. Free, offline and open source. No accounts, ads or tracking.',
+    'Listen to audiobooks from your Android folders or ZIP archives, with saved progress, bookmarks and large controls. Free, offline and open source. No accounts, ads or tracking.',
   ogTitle: 'EVB Folder Player',
   ogDescription: 'Your audiobooks. Your folders. Your place, saved. An offline Android audiobook player.',
   ogImage: `${siteUrl}/featureGraphic.png`,
@@ -321,14 +418,43 @@ useHead({ link: [{ rel: 'canonical', href: siteUrl }] });
 }
 
 .hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 56px 0 48px;
+  display: grid;
+  grid-template-areas:
+    'intro film'
+    'get film';
+  grid-template-rows: 1fr 1fr;
+  grid-template-columns: minmax(0, 500px) auto;
+  gap: 0 clamp(48px, 7vw, 104px);
+  justify-content: center;
+  padding: 44px 0 64px;
+}
+
+.hero-intro {
+  grid-area: intro;
+  align-self: end;
+}
+
+/* The phone and its controls fit the first screen beside the copy. */
+.hero-film {
+  grid-area: film;
+  width: clamp(250px, calc((100svh - 250px) * 0.45), 310px);
+}
+
+.hero-get {
+  grid-area: get;
+  align-self: start;
+  width: min(100%, 430px);
+}
+
+.film-caption {
+  margin: 6px 0 0;
+  color: var(--ink-subtle);
+  font-size: 12px;
   text-align: center;
 }
 
 .hero-icon {
+  display: block;
   margin-bottom: 22px;
   border: 1px solid var(--line);
   border-radius: 22px;
@@ -346,7 +472,7 @@ useHead({ link: [{ rel: 'canonical', href: siteUrl }] });
 
 h1 {
   margin: 14px 0 0;
-  font-size: clamp(36px, 5.4vw, 64px);
+  font-size: clamp(36px, 4.2vw, 58px);
   font-weight: 650;
   line-height: 1.08;
   letter-spacing: -0.04em;
@@ -362,7 +488,6 @@ h1 {
 }
 
 .downloads {
-  width: min(100%, 430px);
   margin-top: 28px;
 }
 
@@ -436,7 +561,6 @@ h1 {
 .release-links {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 14px;
 }
 
@@ -505,6 +629,86 @@ h1 {
   text-align: center;
 }
 
+.viewer {
+  position: relative;
+  display: grid;
+  flex: 1;
+  place-items: center;
+  min-height: 0;
+  padding: 24px 80px;
+  background: rgb(16 25 24 / 92%);
+}
+
+.viewer-figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+}
+
+.viewer-image {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: calc(100svh - 100px);
+  border-radius: 24px;
+}
+
+.viewer-caption {
+  color: #fff;
+  font-size: 14px;
+}
+
+.viewer-count {
+  margin-left: 10px;
+  color: rgb(255 255 255 / 65%);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.viewer-button {
+  position: absolute;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: rgb(255 255 255 / 12%);
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.viewer-button:hover {
+  background: rgb(255 255 255 / 24%);
+}
+
+.viewer-button:focus-visible {
+  outline: 3px solid #c6e4ba;
+  outline-offset: 3px;
+}
+
+.viewer-previous,
+.viewer-next {
+  top: 50%;
+  translate: 0 -50%;
+}
+
+.viewer-previous {
+  left: 16px;
+}
+
+.viewer-next {
+  right: 16px;
+}
+
+.viewer-close {
+  top: 16px;
+  right: 16px;
+}
+
 .features,
 .installation,
 .stores {
@@ -543,6 +747,42 @@ h1 {
 .feature {
   padding: 28px 26px 30px;
   background: var(--paper-raised);
+}
+
+.feature-wide {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 48px;
+  align-items: center;
+}
+
+.zip-steps {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.zip-step {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.zip-icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--accent);
 }
 
 .feature-icon {
@@ -695,7 +935,36 @@ h1 {
   text-underline-offset: 4px;
 }
 
+.author {
+  text-decoration: underline;
+}
+
 @media (max-width: 1000px) {
+  .hero {
+    grid-template-areas:
+      'intro'
+      'get'
+      'film';
+    grid-template-rows: none;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    text-align: center;
+  }
+
+  .hero-icon {
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .hero-film {
+    width: min(290px, 76vw);
+    margin-top: 44px;
+  }
+
+  .release-links {
+    justify-content: center;
+  }
+
   .screenshot-gallery {
     grid-template-columns: repeat(6, 180px);
     overflow-x: auto;
@@ -737,7 +1006,7 @@ h1 {
   }
 
   .hero {
-    padding: 28px 0 30px;
+    padding: 28px 0 40px;
   }
 
   .hero-icon {
@@ -797,6 +1066,25 @@ h1 {
   .feature-grid {
     grid-template-columns: 1fr;
     margin-top: 24px;
+  }
+
+  .feature-wide {
+    grid-template-columns: 1fr;
+  }
+
+  .viewer {
+    padding: 64px 12px 84px;
+  }
+
+  .viewer-image {
+    max-height: calc(100svh - 190px);
+  }
+
+  .viewer-previous,
+  .viewer-next {
+    top: auto;
+    bottom: 18px;
+    translate: none;
   }
 
   .feature {

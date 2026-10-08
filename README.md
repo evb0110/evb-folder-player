@@ -19,7 +19,7 @@ Download an APK from [GitHub Releases](https://github.com/evb0110/evb-folder-pla
 
 Each release also has `SHA256SUMS`. Check a download with `shasum -a 256 -c SHA256SUMS --ignore-missing` on macOS or `sha256sum -c SHA256SUMS --ignore-missing` on Linux.
 
-IzzyOnDroid: submission pending. F-Droid: submission pending.
+F-Droid: submission in review.
 
 [Obtainium](https://github.com/ImranR98/Obtainium) can check for updates from the GitHub Releases URL above. Select the APK for your phone's architecture. Install updates over the existing app to keep your library and listening history.
 
@@ -57,7 +57,7 @@ adb -s DEVICE_SERIAL install -r "dist/android/EVB-Folder-Player-$VERSION-arm64-v
 
 The app's package is `com.evb.folderplayer`, separate from Music Folder Player.
 
-Published APKs are built by F-Droid on Linux, then signed on the Mac with the same developer key. F-Droid verifies its rebuild against the signed arm64 APK before distributing it. GitHub, IzzyOnDroid and F-Droid updates keep the same application ID and signing identity.
+Published APKs are built by F-Droid on Linux, then signed on the Mac with the same developer key. F-Droid verifies its rebuild against the signed arm64 APK before distributing it. GitHub and F-Droid updates keep the same application ID and signing identity.
 
 ```sh
 FOLDER_PLAYER_CREDENTIALS_DIR=/path/to/existing/.credentials npm run release:android -- HEAD dist/android/release
