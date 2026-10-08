@@ -1,8 +1,8 @@
 // Records films from the app's web preview in headless Chromium. Export the preview first:
 //   npm run export:web                  (in the repository root)
 //   node recorder/record.mjs [flow] [--size <phone|desktop>] [--theme <light|dark>]
-// The light phone film plays on this landing (render.mjs). Desktop films show the preview's phone
-// frame at 1280x800, in both themes, for the evb-stack portfolio (export-portfolio.mjs).
+// Phone films play on this landing (render.mjs). Desktop films show the preview's phone frame at
+// 1280x800 for the evb-stack portfolio (export-portfolio.mjs). Both sites follow the visitor's theme.
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { createServer } from 'node:net';
@@ -14,10 +14,8 @@ const REPO = path.resolve(LANDING, '..');
 const FILMS = path.join(REPO, '.devkit/films');
 const SIZES = {
   // The store screenshots' 1080x2400 at 2.62x. Narrower than 492 px, so the app fills the page.
-  // The landing is light only.
-  phone: { width: 412, height: 915, themes: ['light'] },
-  // The portfolio follows the visitor's theme.
-  desktop: { width: 1280, height: 800, themes: ['light', 'dark'] },
+  phone: { width: 412, height: 915 },
+  desktop: { width: 1280, height: 800 },
 };
 const THEMES = ['light', 'dark'];
 
@@ -68,7 +66,7 @@ try {
     await new Promise(resolve => setTimeout(resolve, 100));
   }
   for (const size of sizeFilter ? [sizeFilter] : Object.keys(SIZES)) {
-    for (const theme of themeFilter ? [themeFilter] : SIZES[size].themes) {
+    for (const theme of themeFilter ? [themeFilter] : THEMES) {
       const variant = `${size}-${theme}`;
       console.log(`Recording ${flowName}: ${variant}`);
       // A fresh context per variant: empty library and history, and the chosen theme from the first paint.

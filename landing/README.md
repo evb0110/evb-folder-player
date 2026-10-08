@@ -1,6 +1,6 @@
 # EVB Folder Player landing
 
-The site at [evb-folder-player.vercel.app](https://evb-folder-player.vercel.app): downloads for the latest Android release, a film of the app and real screenshots. It is a separate Nuxt 4 app with Nuxt UI 4, Tailwind 4 and its own pnpm lockfile; Vercel builds it from this folder.
+The site at [evb-folder-player.vercel.app](https://evb-folder-player.vercel.app): downloads for the latest Android release, a film of the app and real screenshots. It follows the visitor's light or dark system theme, like the app. It is a separate Nuxt 4 app with Nuxt UI 4, Tailwind 4 and its own pnpm lockfile; Vercel builds it from this folder.
 
 ```bash
 pnpm install
@@ -8,6 +8,8 @@ pnpm dev
 ```
 
 The download panel reads the latest GitHub release through `server/api/release.get.ts`. Vercel regenerates the page at most every ten minutes, so a new release shows up without a redeploy. The API is cached for ten minutes with stale-while-revalidate. It accepts both `EVB-Folder-Player-<version>-<abi>.apk` and legacy `folder-player-<version>-<abi>.apk` filenames, preferring the branded name for each ABI. If GitHub is unavailable or an asset is missing, that download links to GitHub Releases instead. Links to other sites open in a new tab; release downloads start in place.
+
+For search and link previews, the page carries `MobileApplication` structured data built from the latest release, and `VideoObject` data for the film. `/robots.txt` and `/sitemap.xml`, which lists the screenshots, are prerendered from `NUXT_PUBLIC_SITE_URL`. Screenshots, films and the icon are cached by browsers for a day, because they keep their names when replaced.
 
 ## Vercel
 
@@ -41,10 +43,10 @@ The default local build uses the Node server preset. Open the page and `/api/rel
 The hero film is recorded from the app's web preview, not drawn by hand, and turned into a video with Remotion, as on the EVB Viewer landing.
 
 1. `recorder/record.mjs` serves the root web export (`dist/web`) with `scripts/preview-web.mjs` on a free loopback port and drives it in headless Chromium. The flow in `recorder/flows/player.mjs` plays the bundled sample book, jumps 20 seconds, picks a chapter, switches to car mode, and ends in the library and History. Each state is captured as SVG with dom-to-svg into `../.devkit/films/capture/`; captures are render inputs and are not committed. QA screenshots of every state go to `../.devkit/films/qa/`. The page clock, locale and time zone are fixed, so History shows the same times on every recording.
-2. `recorder/render.mjs` renders `recorder/film/makeRealFilm.tsx`, a Remotion composition that sequences the light 412 × 915 phone recording with taps, to `public/films/player.mp4` at 2x with its poster, `public/films/player-poster.jpg`, and writes `app/films/player.json`.
+2. `recorder/render.mjs` renders `recorder/film/makeRealFilm.tsx`, a Remotion composition that sequences the 412 × 915 phone recordings with taps, to `public/films/player.mp4` (light) and `player-dark.mp4` at 2x, each with a `-poster.jpg`. It writes `app/films/player.json` with the render date for the page's structured data.
 3. `recorder/export-portfolio.mjs` copies the desktop recordings (the preview's phone frame at 1280 × 800, light and dark) into the [evb-stack](https://github.com/evb0110/evb-stack) portfolio, whose player shows the SVG states directly.
 
-The page plays the video only while it is on screen. Visitors who prefer reduced motion see the poster until they press play.
+The page plays the film in the visitor's theme, only while it is on screen. Visitors who prefer reduced motion see the poster until they press play.
 
 To record and render again after the interface changes, from this directory:
 
@@ -60,7 +62,13 @@ The first render downloads Remotion's headless Chrome.
 
 ## Screenshots and store listings
 
-`public/screenshots/1-6.png`, `public/icon.png` and `public/featureGraphic.png` are copied from `fastlane/metadata/android/en-US/images/`; `public/favicon.png` comes from `assets/`. Copy them again when the app's published screenshots change. The gallery reserves each image's 1080 × 2400 dimensions and loads it lazily. Fonts and icons are bundled locally.
+`public/screenshots/1-6.png`, `public/icon.png` and `public/featureGraphic.png` are copied from `fastlane/metadata/android/en-US/images/`; `public/favicon.png` comes from `assets/`. Copy them again when the app's published screenshots change, and regenerate the 400 px WebP thumbnails the gallery shows; the viewer and the sitemap use the full PNGs:
+
+```bash
+for id in 1 2 3 4 5 6; do cwebp -quiet -q 80 -resize 400 0 "public/screenshots/$id.png" -o "public/screenshots/$id-400.webp"; done
+```
+
+The gallery reserves each thumbnail's dimensions and loads it lazily. Their captions and alt text live in `SCREENSHOTS` in `shared/site.ts`. Fonts and icons are bundled locally.
 
 The store card is plain text with “In review”, without badges or outbound listing links. In `shared/site.ts`, replace the store's `url: null` with its confirmed listing URL to enable that card in one line. Both availability and the link label are derived from the URL; there is no separate flag to synchronize. Update the store section's introductory copy once F-Droid publishes the app. IzzyOnDroid is not listed: its AI policy conflicts with how the app was written (see [store submissions](../docs/store-submissions.md)).
 

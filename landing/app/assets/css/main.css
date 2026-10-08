@@ -13,9 +13,29 @@
   --accent: #245e43;
   --accent-ink: #17432f;
   --accent-soft: #e2ebdc;
+  --on-accent: #fff;
+  --bezel-ring: transparent;
+  --selection: #c6e4ba;
   --sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
   --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
   --ui-primary: var(--accent);
+}
+
+/* The app's dark theme, set by color mode from the visitor's system preference. */
+.dark {
+  color-scheme: dark;
+  --paper: #0e1513;
+  --paper-raised: #16201d;
+  --ink: #f5f1e7;
+  --ink-muted: #b3c0b5;
+  --ink-subtle: #95a89b;
+  --line: rgb(245 241 231 / 14%);
+  --accent: #b9e0ae;
+  --accent-ink: #cfeac7;
+  --accent-soft: #1a2a23;
+  --on-accent: #0f1a14;
+  --bezel-ring: rgb(245 241 231 / 16%);
+  --selection: #2f4a3b;
 }
 
 html {
@@ -43,5 +63,5 @@ a:focus-visible,
 
 ::selection {
   color: var(--ink);
-  background: #c6e4ba;
+  background: var(--selection);
 }

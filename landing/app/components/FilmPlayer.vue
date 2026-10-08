@@ -4,9 +4,10 @@
       <div class="film-screen" :style="{ aspectRatio: `${film.width} / ${film.height}` }">
         <video
           v-if="mounted"
+          :key="src"
           ref="video"
           class="film-video"
-          src="/films/player.mp4"
+          :src="src"
           :aria-label="label"
           muted
           playsinline
@@ -18,15 +19,19 @@
           @play="playing = true"
           @pause="playing = false"
         />
-        <!-- The first frame, and the still for reduced motion, until the video shows it. -->
-        <img
-          v-if="showPoster"
-          class="film-poster"
-          src="/films/player-poster.jpg"
-          alt=""
-          :width="film.width"
-          :height="film.height"
-        />
+        <!-- The first frame, and the still for reduced motion, until the video shows it. The color
+             mode follows the system preference, so the server-rendered poster can pick its theme too. -->
+        <picture v-if="showPoster">
+          <source srcset="/films/player-dark-poster.jpg" media="(prefers-color-scheme: dark)" />
+          <img
+            class="film-poster"
+            src="/films/player-poster.jpg"
+            alt=""
+            :width="film.width"
+            :height="film.height"
+            fetchpriority="high"
+          />
+        </picture>
       </div>
     </div>
     <figcaption class="film-controls">
@@ -58,7 +63,9 @@ import film from '~/films/player.json';
 
 defineProps<{ label: string }>();
 
-// Rendered by recorder/render.mjs from a recording of the app's web preview.
+// Rendered by recorder/render.mjs from recordings of the app's web preview, one per theme.
+const colorMode = useColorMode();
+const src = computed(() => (colorMode.value === 'dark' ? '/films/player-dark.mp4' : '/films/player.mp4'));
 const video = useTemplateRef<HTMLVideoElement>('video');
 const reducedMotion = usePreferredReducedMotion();
 const mounted = ref(false);
@@ -129,6 +136,13 @@ useRafFn(() => {
   }
 });
 
+// A theme change loads the other recording; its poster shows until it plays.
+watch(src, () => {
+  playing.value = false;
+  showPoster.value = true;
+  time.value = 0;
+});
+
 // Plays only while on screen.
 useIntersectionObserver(video, ([entry]) => {
   visible.value = Boolean(entry?.isIntersecting);
@@ -159,6 +173,7 @@ onMounted(() => {
   border-radius: 42px;
   background: #18211e;
   box-shadow:
+    0 0 0 1px var(--bezel-ring),
     0 1px 2px rgb(16 25 24 / 12%),
     0 30px 60px -24px rgb(16 25 24 / 45%);
 }

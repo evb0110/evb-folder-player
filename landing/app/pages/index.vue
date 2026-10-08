@@ -21,9 +21,7 @@
         </div>
 
         <div class="hero-film">
-          <FilmPlayer
-            label="EVB Folder Player playing a sample audiobook: jumping 20 seconds, choosing a chapter, car mode, the library and listening history."
-          />
+          <FilmPlayer :label="FILM_DESCRIPTION" />
           <p class="film-caption">Recorded from the app's browser preview.</p>
         </div>
 
@@ -65,17 +63,18 @@
           role="region"
           aria-label="App screenshots, scroll horizontally for more"
         >
-          <figure v-for="(shot, index) in screenshots" :key="shot.id" class="screenshot">
+          <figure v-for="(shot, index) in SCREENSHOTS" :key="shot.id" class="screenshot">
             <a
               :href="`/screenshots/${shot.id}.png`"
               :aria-label="`View screenshot: ${shot.title}`"
               @click="openShot($event, index)"
             >
+              <!-- A 400 px thumbnail; the link and the viewer show the full screenshot. -->
               <img
-                :src="`/screenshots/${shot.id}.png`"
+                :src="`/screenshots/${shot.id}-400.webp`"
                 :alt="shot.alt"
-                width="1080"
-                height="2400"
+                width="400"
+                height="889"
                 loading="lazy"
                 decoding="async"
               />
@@ -96,7 +95,7 @@
                   height="2400"
                 />
                 <figcaption class="viewer-caption">
-                  {{ shown.title }} <span class="viewer-count">{{ shownIndex + 1 }} / {{ screenshots.length }}</span>
+                  {{ shown.title }} <span class="viewer-count">{{ shownIndex + 1 }} / {{ SCREENSHOTS.length }}</span>
                 </figcaption>
               </figure>
               <button
@@ -232,43 +231,16 @@
 
 <script setup lang="ts">
 import { RELEASES_URL, REPOSITORY_URL, type IReleaseAsset, type ILatestRelease } from '#shared/release';
-import { STORES } from '#shared/site';
+import { SCREENSHOTS, STORES } from '#shared/site';
+import film from '~/films/player.json';
 
 /** Pages on other sites open in a new tab, so the landing stays open. */
 const NEW_TAB = { target: '_blank', rel: 'noopener noreferrer' };
-
-const screenshots = [
-  {
-    id: 1,
-    title: 'Your library',
-    alt: 'Light-themed library with Books and Folders tabs, a search field, A Quieter Chapter audiobook, and Add folder.',
-  },
-  {
-    id: 2,
-    title: 'Pick up your book',
-    alt: 'Audiobook player showing A Quieter Chapter, saved position, play and 20-second jumps, speed, sleep timer, bookmark, undo and history controls.',
-  },
-  {
-    id: 3,
-    title: 'Chapters in order',
-    alt: 'Naturally ordered chapter list with A place to begin selected, followed by A quieter chapter and Your next story, above the mini player.',
-  },
-  {
-    id: 4,
-    title: 'Larger controls',
-    alt: 'Car mode with an extra-large play button, separate 20-second backward and forward controls, and a keep-screen-on control.',
-  },
-  {
-    id: 5,
-    title: 'A darker evening',
-    alt: 'Dark-themed audiobook player with a green play button and sleep timer options from off to 60 minutes.',
-  },
-  {
-    id: 6,
-    title: 'Find your place again',
-    alt: 'Dark-themed listening history with All and Bookmarks tabs, an Undo button, a saved bookmark and earlier listening positions.',
-  },
-];
+const DESCRIPTION =
+  'Listen to audiobooks from your Android folders or ZIP archives, with saved progress, bookmarks and large controls. Free, offline and open source. No accounts, ads or tracking.';
+const FILM_DESCRIPTION =
+  'EVB Folder Player playing a sample audiobook: jumping 20 seconds, choosing a chapter, car mode, the library and listening history.';
+const IMAGE_ALT = 'EVB Folder Player, offline audiobooks from your folders.';
 
 const zipSteps = [
   { icon: 'i-lucide-send', text: 'Open the ZIP from Telegram, a download or a file manager.' },
@@ -311,7 +283,7 @@ const features = [
 
 const viewerOpen = ref(false);
 const shownIndex = ref(0);
-const shown = computed(() => screenshots[shownIndex.value]!);
+const shown = computed(() => SCREENSHOTS[shownIndex.value]!);
 
 /** Opens the screenshot viewer; modified clicks keep the browser's own behaviour, such as a new tab. */
 function openShot(event: MouseEvent, index: number) {
@@ -324,7 +296,7 @@ function openShot(event: MouseEvent, index: number) {
 }
 
 function step(delta: number) {
-  shownIndex.value = (shownIndex.value + delta + screenshots.length) % screenshots.length;
+  shownIndex.value = (shownIndex.value + delta + SCREENSHOTS.length) % SCREENSHOTS.length;
 }
 
 const { data: release } = await useFetch<ILatestRelease | null>('/api/release', { default: () => null });
@@ -340,22 +312,68 @@ function formatSize(bytes: number) {
 }
 
 const siteUrl = useRuntimeConfig().public.siteUrl.replace(/\/$/, '');
+const pageUrl = `${siteUrl}/`;
 useSeoMeta({
-  title: 'EVB Folder Player · Offline audiobooks for Android',
-  description:
-    'Listen to audiobooks from your Android folders or ZIP archives, with saved progress, bookmarks and large controls. Free, offline and open source. No accounts, ads or tracking.',
+  title: 'EVB Folder Player · Offline audiobook player for Android',
+  description: DESCRIPTION,
+  author: 'Eugene Barsky',
+  robots: 'index, follow, max-image-preview:large, max-video-preview:-1',
+  ogSiteName: 'EVB Folder Player',
   ogTitle: 'EVB Folder Player',
   ogDescription: 'Your audiobooks. Your folders. Your place, saved. An offline Android audiobook player.',
   ogImage: `${siteUrl}/featureGraphic.png`,
+  ogImageType: 'image/png',
   ogImageWidth: 1024,
   ogImageHeight: 500,
-  ogImageAlt: 'EVB Folder Player, offline audiobooks from your folders.',
+  ogImageAlt: IMAGE_ALT,
+  ogLocale: 'en_US',
   ogType: 'website',
-  ogUrl: siteUrl,
+  ogUrl: pageUrl,
   twitterCard: 'summary_large_image',
   twitterImage: `${siteUrl}/featureGraphic.png`,
+  twitterImageAlt: IMAGE_ALT,
 });
-useHead({ link: [{ rel: 'canonical', href: siteUrl }] });
+
+// Structured data for search: the app with its latest release, and the film.
+const structuredData = computed(() => ({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'MobileApplication',
+      '@id': `${pageUrl}#app`,
+      name: 'EVB Folder Player',
+      description: DESCRIPTION,
+      url: pageUrl,
+      image: `${siteUrl}/icon.png`,
+      screenshot: SCREENSHOTS.map(shot => `${siteUrl}/screenshots/${shot.id}.png`),
+      operatingSystem: 'Android',
+      applicationCategory: 'MultimediaApplication',
+      softwareVersion: release.value?.version,
+      dateModified: release.value?.publishedAt,
+      downloadUrl: arm64.value?.url ?? RELEASES_URL,
+      fileSize: arm64.value ? formatSize(arm64.value.size) : undefined,
+      isAccessibleForFree: true,
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      license: `${REPOSITORY_URL}/blob/master/LICENSE`,
+      sameAs: REPOSITORY_URL,
+      author: { '@type': 'Person', name: 'Eugene Barsky', url: 'https://evb-stack.com/' },
+    },
+    {
+      '@type': 'VideoObject',
+      name: 'EVB Folder Player in 20 seconds',
+      description: FILM_DESCRIPTION,
+      thumbnailUrl: `${siteUrl}/films/player-poster.jpg`,
+      contentUrl: `${siteUrl}/films/player.mp4`,
+      uploadDate: film.rendered,
+      duration: `PT${Math.round(film.frames / film.fps)}S`,
+      about: { '@id': `${pageUrl}#app` },
+    },
+  ],
+}));
+useHead(() => ({
+  link: [{ rel: 'canonical', href: pageUrl }],
+  script: [{ key: 'structured-data', type: 'application/ld+json', textContent: JSON.stringify(structuredData.value) }],
+}));
 </script>
 
 <style scoped>
@@ -498,7 +516,7 @@ h1 {
   min-height: 78px;
   padding: 16px 20px;
   border-radius: 14px;
-  color: #fff;
+  color: var(--on-accent);
   background: var(--accent);
   text-align: left;
   text-decoration: none;
