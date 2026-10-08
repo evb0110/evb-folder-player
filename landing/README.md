@@ -42,7 +42,7 @@ The default local build uses the Node server preset. Open the page and `/api/rel
 
 The hero film is recorded from the app's web preview, not drawn by hand, and turned into a video with Remotion, as on the EVB Viewer landing.
 
-1. `recorder/record.mjs` serves the root web export (`dist/web`) with `scripts/preview-web.mjs` on a free loopback port and drives it in headless Chromium. The flow in `recorder/flows/player.mjs` plays the bundled sample book, jumps 20 seconds, picks a chapter, switches to car mode, and ends in the library and History. Each state is captured as SVG with dom-to-svg into `../.devkit/films/capture/`; captures are render inputs and are not committed. QA screenshots of every state go to `../.devkit/films/qa/`. The page clock, locale and time zone are fixed, so History shows the same times on every recording.
+1. `recorder/record.mjs` serves the root web export (`dist/web`) with `scripts/preview-web.mjs` on a free loopback port and drives it in headless Chromium. The flow in `recorder/flows/player.mjs` plays the bundled sample book, jumps 20 seconds, sets a volume boost, picks a chapter, switches to car mode, and ends in the library and History. Each state is captured as SVG with dom-to-svg into `../.devkit/films/capture/`; captures are render inputs and are not committed. QA screenshots of every state go to `../.devkit/films/qa/`. The page clock, locale and time zone are fixed, so History shows the same times on every recording.
 2. `recorder/render.mjs` renders `recorder/film/makeRealFilm.tsx`, a Remotion composition that sequences the 412 × 915 phone recordings with taps, to `public/films/player.mp4` (light) and `player-dark.mp4` at 2x, each with a `-poster.jpg`. It writes `app/films/player.json` with the render date for the page's structured data.
 3. `recorder/export-portfolio.mjs` copies the desktop recordings (the preview's phone frame at 1280 × 800, light and dark) into the [evb-stack](https://github.com/evb0110/evb-stack) portfolio, whose player shows the SVG states directly.
 
@@ -62,13 +62,13 @@ The first render downloads Remotion's headless Chrome.
 
 ## Screenshots and store listings
 
-`public/screenshots/1-6.png`, `public/icon.png` and `public/featureGraphic.png` are copied from `fastlane/metadata/android/en-US/images/`; `public/favicon.png` comes from `assets/`. Copy them again when the app's published screenshots change, and regenerate the 400 px WebP thumbnails the gallery shows; the viewer and the sitemap use the full PNGs:
+`public/screenshots/1-7.png`, `public/icon.png` and `public/featureGraphic.png` are copied from `fastlane/metadata/android/en-US/images/`; `public/favicon.png` comes from `assets/`. Copy them again when the app's published screenshots change, and regenerate the 400 px WebP thumbnails the gallery shows; the viewer and the sitemap use the full PNGs:
 
 ```bash
-for id in 1 2 3 4 5 6; do cwebp -quiet -q 80 -resize 400 0 "public/screenshots/$id.png" -o "public/screenshots/$id-400.webp"; done
+for id in 1 2 3 4 5 6 7; do cwebp -quiet -q 80 -resize 400 0 "public/screenshots/$id.png" -o "public/screenshots/$id-400.webp"; done
 ```
 
-The gallery reserves each thumbnail's dimensions and loads it lazily. Their captions and alt text live in `SCREENSHOTS` in `shared/site.ts`. Fonts and icons are bundled locally.
+Screenshots 1-6 capture the web preview at the phone film's 412-pixel width, saved at 1080 × 2400. Screenshot 7 is the Android 16 lock screen of an emulator running the release APK. The gallery reserves each thumbnail's dimensions and loads it lazily. Their captions and alt text live in `SCREENSHOTS` in `shared/site.ts`. Fonts and icons are bundled locally.
 
 The store card is plain text with “In review”, without badges or outbound listing links. In `shared/site.ts`, replace the store's `url: null` with its confirmed listing URL to enable that card in one line. Both availability and the link label are derived from the URL; there is no separate flag to synchronize. Update the store section's introductory copy once F-Droid publishes the app. IzzyOnDroid is not listed: its AI policy conflicts with how the app was written (see [store submissions](../docs/store-submissions.md)).
 

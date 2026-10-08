@@ -138,6 +138,11 @@
               </li>
             </ol>
           </article>
+          <article v-for="feature in highlights" :key="feature.title" class="feature feature-half">
+            <UIcon class="feature-icon" :name="feature.icon" />
+            <h3>{{ feature.title }}</h3>
+            <p>{{ feature.text }}</p>
+          </article>
           <article v-for="feature in features" :key="feature.title" class="feature">
             <UIcon class="feature-icon" :name="feature.icon" />
             <h3>{{ feature.title }}</h3>
@@ -237,15 +242,29 @@ import film from '~/films/player.json';
 /** Pages on other sites open in a new tab, so the landing stays open. */
 const NEW_TAB = { target: '_blank', rel: 'noopener noreferrer' };
 const DESCRIPTION =
-  'Listen to audiobooks from your Android folders or ZIP archives, with saved progress, bookmarks and large controls. Free, offline and open source. No accounts, ads or tracking.';
+  'Listen to audiobooks from your Android folders or ZIP archives, with saved progress, bookmarks, volume boost and large controls. Free, offline and open source. No accounts, ads or tracking.';
 const FILM_DESCRIPTION =
-  'EVB Folder Player playing a sample audiobook: jumping 20 seconds, choosing a chapter, car mode, the library and listening history.';
+  'EVB Folder Player playing a sample audiobook: jumping 20 seconds, boosting the volume, choosing a chapter, car mode, the library and listening history.';
 const IMAGE_ALT = 'EVB Folder Player, offline audiobooks from your folders.';
 
 const zipSteps = [
   { icon: 'i-lucide-send', text: 'Open the ZIP from Telegram, a download or a file manager.' },
   { icon: 'i-lucide-folder-input', text: 'Choose EVB Folder Player. The first time, pick the folder for new books.' },
   { icon: 'i-lucide-book-open', text: 'Open the book as soon as it is unpacked.' },
+];
+
+/** Shown as two wider cards under the ZIP card. */
+const highlights = [
+  {
+    icon: 'i-lucide-volume-2',
+    title: 'Louder than full volume',
+    text: "Some recordings are just quiet. Volume boost adds up to 12 dB beyond Android's maximum and compresses loud peaks instead of letting them distort. It stays on for every book until you turn it off.",
+  },
+  {
+    icon: 'i-lucide-smartphone',
+    title: 'Controls on the lock screen',
+    text: 'Pause, resume or jump 20 seconds back or forward from the lock screen or the notification, without unlocking your phone. Each jump is saved in History, so you can undo it.',
+  },
 ];
 
 const features = [
@@ -608,7 +627,8 @@ h1 {
 
 .screenshot-gallery {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
   gap: 18px;
   padding: 6px 2px 14px;
 }
@@ -753,7 +773,7 @@ h1 {
 
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 1px;
   margin-top: 30px;
   overflow: hidden;
@@ -763,8 +783,13 @@ h1 {
 }
 
 .feature {
+  grid-column: span 2;
   padding: 28px 26px 30px;
   background: var(--paper-raised);
+}
+
+.feature-half {
+  grid-column: span 3;
 }
 
 .feature-wide {
@@ -984,7 +1009,7 @@ h1 {
   }
 
   .screenshot-gallery {
-    grid-template-columns: repeat(6, 180px);
+    grid-auto-columns: 180px;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
   }
@@ -999,6 +1024,10 @@ h1 {
 
   .feature-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .feature:not(.feature-wide) {
+    grid-column: auto;
   }
 
   .install-grid {
@@ -1071,7 +1100,7 @@ h1 {
   }
 
   .screenshot-gallery {
-    grid-template-columns: repeat(6, 170px);
+    grid-auto-columns: 170px;
     gap: 14px;
   }
 

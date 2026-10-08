@@ -16,7 +16,7 @@ export const SCREENSHOTS = [
   {
     id: 2,
     title: 'Pick up your book',
-    alt: 'Audiobook player showing A Quieter Chapter, saved position, play and 20-second jumps, speed, sleep timer, bookmark, undo and history controls.',
+    alt: 'Audiobook player showing A Quieter Chapter, saved position, play and 20-second jumps, speed, volume boost, sleep timer, bookmark, undo and history controls.',
   },
   {
     id: 3,
@@ -30,12 +30,17 @@ export const SCREENSHOTS = [
   },
   {
     id: 5,
-    title: 'A darker evening',
-    alt: 'Dark-themed audiobook player with a green play button and sleep timer options from off to 60 minutes.',
+    title: 'Louder when you need it',
+    alt: 'Dark-themed audiobook player with volume boost options from off to +12 dB, with +6 dB selected.',
   },
   {
     id: 6,
     title: 'Find your place again',
     alt: 'Dark-themed listening history with All and Bookmarks tabs, an Undo button, a saved bookmark and earlier listening positions.',
+  },
+  {
+    id: 7,
+    title: 'On the lock screen',
+    alt: 'Android lock screen with A quieter chapter playing: pause, 20-second back and forward buttons and a position bar.',
   },
 ];
