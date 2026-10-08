@@ -2,7 +2,7 @@
 
 | Store | Status | Account needed | Where |
 | --- | --- | --- | --- |
-| GitHub Releases | Published, v0.3.2 | none | <https://github.com/evb0110/evb-folder-player/releases> |
+| GitHub Releases | Published, v0.3.3 | none | <https://github.com/evb0110/evb-folder-player/releases> |
 | IzzyOnDroid | Not submitted; current AI policy conflicts with generated app code | Codeberg | <https://izzyondroid.org/docs/general/AppInclusionPolicy/#ai-policy> |
 | F-Droid | Submitted; hosted checks passed, maintainer review pending | GitLab | <https://gitlab.com/fdroid/fdroiddata/-/merge_requests/51066> |
 
@@ -28,11 +28,11 @@ The current [AI policy](https://izzyondroid.org/docs/general/AppInclusionPolicy/
   ```text
   EVB Folder Player plays audiobooks from folders on the device. Pick a folder with Android's folder picker, including subfolders, or scan indexed device audio. Files are never moved, renamed, modified or deleted.
 
-  Each folder keeps its own listening position. Progress is saved during playback and on pause, with history, bookmarks, checkpoints before jumps and undo. It has chapter lists with natural filename ordering, playback speed, a sleep timer, a large car mode, light and dark themes, and background playback with a media notification. Headset next/previous presses are ignored so a book cannot skip chapters by accident.
+  Each folder keeps its own listening position. Progress is saved during playback and on pause, with history, bookmarks, checkpoints before jumps and undo. It has chapter lists with natural filename ordering, playback speed, a volume boost of up to 12 dB, a sleep timer, a large car mode, light and dark themes, and background playback with play/pause and 20-second jumps on the lock screen and in the notification. Headset next/previous presses are ignored so a book cannot skip chapters by accident.
 
   No accounts, ads, analytics or tracking. The release APK has no INTERNET permission.
 
-  Releases on GitHub carry two APKs: EVB-Folder-Player-<version>-arm64-v8a.apk and EVB-Folder-Player-<version>-armeabi-v7a.apk (same versionCode and signing key). Please track whichever ABI you prefer. For 0.3.2, arm64-v8a is 28.7 MB (28,656,581 bytes) and armeabi-v7a is 23.5 MB (23,479,269 bytes).
+  Releases on GitHub carry two APKs: EVB-Folder-Player-<version>-arm64-v8a.apk and EVB-Folder-Player-<version>-armeabi-v7a.apk (same versionCode and signing key). Please track whichever ABI you prefer. For 0.3.3, arm64-v8a is 28.7 MB (28,656,581 bytes) and armeabi-v7a is 23.5 MB (23,479,269 bytes).
   ```
 
 - **Build instructions:**
@@ -60,7 +60,7 @@ F-Droid submissions are merge requests to the `fdroiddata` repository. Everythin
 1. Create a GitLab account at <https://gitlab.com/users/sign_up>. If GitLab asks for a phone number or credit card for CI, don't provide one. Mention it in the merge request instead, and the F-Droid team will run the CI.
 2. Open <https://gitlab.com/fdroid/fdroiddata> and click **Fork**. Keep the fork public.
 3. In your fork, create a branch named `com.evb.folderplayer`. Use **Code → Branches → New branch**, starting from `master`.
-4. On that branch, add the file `metadata/com.evb.folderplayer.yml`. Paste the exact contents of [`docs/fdroid/com.evb.folderplayer.yml`](fdroid/com.evb.folderplayer.yml) from this repository. It already names the v0.3.2 commit. Use the commit message `New App: com.evb.folderplayer`.
+4. On that branch, add the file `metadata/com.evb.folderplayer.yml`. Paste the exact contents of [`docs/fdroid/com.evb.folderplayer.yml`](fdroid/com.evb.folderplayer.yml) from this repository. It already names the v0.3.3 commit. Use the commit message `New App: com.evb.folderplayer`.
 5. Open **Merge requests → New merge request**. Choose your branch as the source and `fdroid/fdroiddata` `master` as the target. Title it `New app: EVB Folder Player`, choose the **App inclusion** template, and tick the checklist items. Add this note under the checklist:
 
    ```text

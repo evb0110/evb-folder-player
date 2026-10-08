@@ -16,7 +16,7 @@ Binaries:
 Builds:
   - versionName: 0.3.3
     versionCode: 6
-    commit: 815cfc6be5c69cce7e4c27073e3dba47008b0dd4
+    commit: e8b22031a2b198397e1e541b86658699223a000c
     sudo:
       - apt-get update
       - apt-get install -y openjdk-21-jdk-headless nodejs npm
