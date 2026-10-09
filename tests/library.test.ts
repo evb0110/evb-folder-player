@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { clockTime, folderChildren, naturalCompare, parentFolder, percent } from '../src/player/format.ts';
 import { bookPlayback, sleepMinutesLeft } from '../src/player/playback.ts';
 import { importSummary } from '../src/player/importText.ts';
+import { hasLiveAlerts } from '../src/player/liveAlerts.ts';
 import type { IBook } from '../src/player/types.ts';
 const book = (path: string): IBook => ({ id: path, root: 'test', path, name: path.split('/').at(-1)!, tracks: [] });
 test('numeric filenames play in chapter order, including numbers larger than machine integers', () => {
@@ -98,4 +99,11 @@ test('import banner explains where the archive went', () => {
   );
   assert.match(importSummary({ ...base, state: 'done', archive: 'kept', source: 'other' }).text, /was kept/);
   assert.equal(importSummary({ ...base, state: 'failed', message: 'Damaged.' }).text, 'Damaged.');
+});
+test('only ColorOS phones get the Live Alerts lock-screen tip', () => {
+  assert.ok(hasLiveAlerts('OPPO', 'OPPO'));
+  assert.ok(hasLiveAlerts('OnePlus', 'OnePlus'));
+  assert.ok(hasLiveAlerts('realme', 'realme'));
+  assert.ok(!hasLiveAlerts('Google', 'google'));
+  assert.ok(!hasLiveAlerts('samsung', 'samsung'));
 });

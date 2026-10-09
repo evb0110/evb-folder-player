@@ -287,6 +287,12 @@ export const player: IPlayerAdapter = {
   async cancelImport() {},
   async dismissImport() {},
   async openDownloads() {},
+  async isTipDismissed(id) {
+    return localStorage.getItem(`folder-player-tip-${id}`) === 'dismissed';
+  },
+  async dismissTip(id) {
+    localStorage.setItem(`folder-player-tip-${id}`, 'dismissed');
+  },
 };
 
 // Headset next/previous are ignored on purpose; only natural chapter completion advances.

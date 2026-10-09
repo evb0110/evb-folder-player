@@ -263,7 +263,7 @@ const highlights = [
   {
     icon: 'i-lucide-smartphone',
     title: 'Controls on the lock screen',
-    text: 'Pause, resume or jump 20 seconds back or forward from the lock screen or the notification, without unlocking your phone. Each jump is saved in History, so you can undo it.',
+    text: 'Pause, resume or jump 20 seconds back or forward from the lock screen or the notification, without unlocking your phone. Each jump is saved in History, so you can undo it. On OPPO, OnePlus and realme phones, turn on Music playback under Live Alerts in Settings first.',
   },
 ];
 

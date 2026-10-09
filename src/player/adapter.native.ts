@@ -16,6 +16,8 @@ interface INativeAudio {
   cancelImport(): Promise<void>;
   dismissImport(): Promise<void>;
   openDownloads(): Promise<void>;
+  isTipDismissed(id: string): Promise<boolean>;
+  dismissTip(id: string): Promise<void>;
 }
 
 const native = requireNativeModule<INativeAudio>('FolderAudio');
@@ -55,4 +57,6 @@ export const player: IPlayerAdapter = {
   cancelImport: () => native.cancelImport(),
   dismissImport: () => native.dismissImport(),
   openDownloads: () => native.openDownloads(),
+  isTipDismissed: id => native.isTipDismissed(id),
+  dismissTip: id => native.dismissTip(id),
 };

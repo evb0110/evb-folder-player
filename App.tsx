@@ -23,6 +23,9 @@ import { CarMode } from './src/components/CarMode';
 import { MiniPlayer } from './src/components/MiniPlayer';
 import { Icon } from './src/components/Icon';
 import { ImportBanner } from './src/components/ImportBanner';
+import { TipBanner } from './src/components/TipBanner';
+import { player } from './src/player/adapter';
+import { hasLiveAlerts, liveAlertsTip } from './src/player/liveAlerts';
 
 type TScreen = 'library' | 'player' | 'history';
 
@@ -33,6 +36,28 @@ function usePhoneFrame() {
   const window = useWindowDimensions();
   const desktop = Platform.OS === 'web' && window.width >= PHONE.width + 80 && window.height >= 640;
   return desktop ? { width: PHONE.width, height: Math.min(PHONE.height, window.height - 48) } : null;
+}
+
+/** Once playback starts on a phone whose lock-screen player can depend on Live Alerts, until the tip is closed. */
+function useLiveAlertsTip(playing: boolean) {
+  const eligible =
+    Platform.OS === 'android' && hasLiveAlerts(Platform.constants.Manufacturer, Platform.constants.Brand);
+  const [pending, setPending] = useState(false);
+  const [played, setPlayed] = useState(false);
+  useEffect(() => {
+    if (!eligible) return;
+    // A failed read leaves the tip hidden.
+    player.isTipDismissed(liveAlertsTip.id).then(
+      dismissed => setPending(!dismissed),
+      () => {},
+    );
+  }, [eligible]);
+  if (playing && !played) setPlayed(true);
+  const dismiss = () => {
+    setPending(false);
+    void player.dismissTip(liveAlertsTip.id);
+  };
+  return { visible: pending && played, dismiss };
 }
 
 /** Opening a screen already in the stack returns to it instead of stacking a duplicate. */
@@ -53,6 +78,7 @@ function PlayerApp() {
   const [playerTab, setPlayerTab] = useState<TPlayerTab>('listen');
   const [carMode, setCarMode] = useState(false);
   const [keepAwake, setKeepAwake] = useState(true);
+  const tip = useLiveAlertsTip(status.playing);
 
   const screen = stack[stack.length - 1];
   const activeBook = model.books.find(book => book.id === status.bookId);
@@ -114,6 +140,9 @@ function PlayerApp() {
             onDismiss={() => void model.importAction('dismiss')}
             onOpenDownloads={() => void model.importAction('openDownloads')}
           />
+        ) : null}
+        {tip.visible && !carMode ? (
+          <TipBanner title={liveAlertsTip.title} text={liveAlertsTip.text} onDismiss={tip.dismiss} />
         ) : null}
         <View style={s.main}>
           {/* Car mode covers the player instead of replacing it, so the chapter list keeps its place. */}

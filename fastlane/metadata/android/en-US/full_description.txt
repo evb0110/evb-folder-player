@@ -10,6 +10,6 @@ Choose chapters, adjust playback speed, or set a sleep timer. Car mode provides 
 
 If a recording is too quiet, volume boost raises playback by up to 12 dB above Android's maximum volume and compresses loud peaks instead of distorting them.
 
-Playback continues in the background. Pause, resume, or jump 20 seconds back or forward from the lock screen or the notification without unlocking your phone; each jump can be undone. Headset next/previous commands are ignored to avoid accidental chapter changes; chapters advance automatically when they finish.
+Playback continues in the background. Pause, resume, or jump 20 seconds back or forward from the lock screen or the notification without unlocking your phone; each jump can be undone. On OPPO, OnePlus and realme phones, turn on Music playback under Live Alerts in Settings to see these controls on the lock screen. Headset next/previous commands are ignored to avoid accidental chapter changes; chapters advance automatically when they finish.
 
 The app stores its library and listening history only on your device. Clearing app storage or uninstalling removes that data, leaving your original audio files untouched.

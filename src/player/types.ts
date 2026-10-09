@@ -87,4 +87,6 @@ export interface IPlayerAdapter {
   dismissImport(): Promise<void>;
   /** Opens the system Downloads view, where a downloaded archive can be deleted. */
   openDownloads(): Promise<void>;
+  isTipDismissed(id: string): Promise<boolean>;
+  dismissTip(id: string): Promise<void>;
 }

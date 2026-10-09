@@ -25,6 +25,9 @@ class FolderAudioModule : Module() {
       require(value in listOf("system", "light", "dark")) { "Unknown theme" }
       store.write("theme", value)
     }
+    // A tip the user closed stays closed.
+    AsyncFunction("isTipDismissed") { id: String -> store.read("tip.$id") == "dismissed" }
+    AsyncFunction("dismissTip") { id: String -> store.write("tip.$id", "dismissed") }
     AsyncFunction("getLibrary") { store.books().toString() }
     AsyncFunction("getHistory") { store.history().toString() }
     AsyncFunction("getStatus") {

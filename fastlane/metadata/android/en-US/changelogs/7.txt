@@ -1,0 +1,1 @@
+OPPO, OnePlus and realme phones show playback controls on the lock screen only while Live Alerts allows music playback. The app now says so once, the first time you play: open Settings, search for Live Alerts and turn on Music playback.
