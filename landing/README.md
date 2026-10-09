@@ -13,17 +13,30 @@ For search and link previews, the page carries `MobileApplication` structured da
 
 ## Vercel
 
-Create the project from `evb0110/evb-folder-player` with:
+The Vercel project `evb-folder-player` has no Git connection, so a push deploys nothing. After pushing a commit that changes this folder, deploy it from the Mac, as for the EVB Viewer landing:
 
-- Production branch: **master** (after the parent integrates the landing commit).
+```bash
+pnpm run deploy:prod      # production; the checkout must be at origin/master
+pnpm run deploy:preview   # a preview of HEAD
+```
+
+`scripts/deploy.mjs` uploads a copy of the committed `landing/` tree without `.git`, so Vercel receives no commit author; the commit goes into the deployment's `commit` metadata. Vercel builds the copy with the project's settings and environment variables. Both commands refuse uncommitted changes in this folder. Production also refuses any HEAD other than `origin/master`, then checks that the site serves the new deployment and that `/` and `/api/release` answer. An app release needs no deploy, because the download panel reads the latest release when the page is served.
+
+Link each checkout once. This writes the ignored `.vercel/project.json` and a `.env.local` with a short-lived Vercel token, which is ignored too:
+
+```bash
+vercel link --yes --project evb-folder-player --scope eugenes-projects-23020cc6
+```
+
+Project settings:
+
 - Framework preset: **Nuxt.js**.
-- Root directory: **landing**.
+- Root directory: none; the upload is this folder.
 - Install command: **pnpm install --frozen-lockfile**.
 - Build command: **pnpm build**.
 - Output directory: leave the framework default (no override).
-- Node.js version: **22.x** (matches Nitro's generated function runtime).
+- Node.js version: **24.x**.
 - Environment variable: `NUXT_PUBLIC_SITE_URL=https://evb-folder-player.vercel.app` (this is also the default). Set it to the public origin if a custom domain is used.
-- Include source files outside the root directory: **off**. All required assets are copied into `public/`.
 
 Nuxt selects its Vercel preset on Vercel, including the server route and ISR page. Do not use a static-only export: the release API needs server execution. This folder has no build dependency on the Expo app, Android tools or the root npm install.
 

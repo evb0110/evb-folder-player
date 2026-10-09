@@ -11,7 +11,8 @@ dist/
 *.tsbuildinfo
 .DS_Store
 
-# Separate Nuxt landing build outputs
+# Separate Nuxt landing build outputs and Vercel CLI files
 /landing/.nuxt/
 /landing/.output/
 /landing/.vercel/
+/landing/.env*
