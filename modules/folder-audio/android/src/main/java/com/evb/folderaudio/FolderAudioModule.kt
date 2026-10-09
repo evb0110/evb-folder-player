@@ -9,6 +9,7 @@ import expo.modules.kotlin.Promise
 import expo.modules.kotlin.functions.Queues
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.Executors
 
@@ -28,6 +29,9 @@ class FolderAudioModule : Module() {
     // A tip the user closed stays closed.
     AsyncFunction("isTipDismissed") { id: String -> store.read("tip.$id") == "dismissed" }
     AsyncFunction("dismissTip") { id: String -> store.write("tip.$id", "dismissed") }
+    // Paths removed from the library list. Their files and positions stay, and rescans keep them hidden.
+    AsyncFunction("getHiddenFolders") { store.read("hiddenFolders", "[]") }
+    AsyncFunction("setHiddenFolders") { paths: String -> store.write("hiddenFolders", JSONArray(paths).toString()) }
     AsyncFunction("getLibrary") { store.books().toString() }
     AsyncFunction("getHistory") { store.history().toString() }
     AsyncFunction("getStatus") {

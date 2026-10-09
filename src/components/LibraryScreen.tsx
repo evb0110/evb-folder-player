@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { createThemedStyles, fonts, touch, useTheme } from '../theme';
-import { clockTime, folderChildren, parentFolder } from '../player/format';
+import { clockTime, folderChildren, isHidden, parentFolder } from '../player/format';
 import { bookPlayback } from '../player/playback';
 import type { IBook, IStatus, TImportMethod } from '../player/types';
 import { Action, IconButton, Segmented } from './Controls';
@@ -19,25 +19,42 @@ const modes = [
 
 interface IProps {
   books: IBook[];
+  /** Paths removed from the list; see `isHidden`. */
+  hidden: string[];
   status: IStatus;
   busy: boolean;
   importFolder: string | null;
   onImport: (method: TImportMethod) => void;
   onBook: (book: IBook) => void;
+  onHide: (path: string) => void;
+  onShow: (path: string) => void;
   onHistory: () => void;
 }
 
-export function LibraryScreen({ books, status, busy, importFolder, onImport, onBook, onHistory }: IProps) {
+export function LibraryScreen({
+  books,
+  hidden,
+  status,
+  busy,
+  importFolder,
+  onImport,
+  onBook,
+  onHide,
+  onShow,
+  onHistory,
+}: IProps) {
   const { colors } = useTheme();
   const s = useStyles();
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState<TMode>('books');
   const [path, setPath] = useState('');
   const [panel, setPanel] = useState<'add' | 'theme' | null>(null);
+  const [editing, setEditing] = useState(false);
+  const shown = useMemo(() => books.filter(book => !isHidden(book.path, hidden)), [books, hidden]);
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return books.filter(book => `${book.name} ${book.path}`.toLowerCase().includes(needle));
-  }, [books, query]);
+    return shown.filter(book => `${book.name} ${book.path}`.toLowerCase().includes(needle));
+  }, [shown, query]);
   const browsing = mode === 'folders' && !query;
   const folder = folderChildren(filtered, path);
   const rows = browsing ? folder.books : filtered;
@@ -99,14 +116,39 @@ export function LibraryScreen({ books, status, busy, importFolder, onImport, onB
           <>
             <View style={s.filters}>
               <Segmented options={modes} value={mode} onChange={setMode} />
-              <IconButton name="refresh" label="Rescan folders" disabled={busy} onPress={() => onImport('rescan')} />
+              <View style={s.tools}>
+                <IconButton
+                  name="edit"
+                  label="Remove from library"
+                  active={editing}
+                  onPress={() => setEditing(current => !current)}
+                />
+                <IconButton name="refresh" label="Rescan folders" disabled={busy} onPress={() => onImport('rescan')} />
+              </View>
             </View>
+            {editing ? (
+              <View style={s.editPanel}>
+                <Text style={s.panelNote}>
+                  Tap × to remove a folder or book from this list. Its files stay on the phone, its position is kept,
+                  and rescans leave it out.
+                </Text>
+                {hidden.length ? <Text style={s.hiddenTitle}>Removed from library</Text> : null}
+                {hidden.map(path => (
+                  <View key={path} style={s.hiddenRow}>
+                    <Text style={s.hiddenPath} numberOfLines={2}>
+                      {path}
+                    </Text>
+                    <IconButton name="plus" label={`Show ${path} again`} onPress={() => onShow(path)} />
+                  </View>
+                ))}
+              </View>
+            ) : null}
             <View style={s.search}>
               <Icon name="search" color={colors.subtle} size={19} />
               <TextInput
                 value={query}
                 onChangeText={setQuery}
-                placeholder={`Search ${books.length} ${books.length === 1 ? 'book' : 'books'}`}
+                placeholder={`Search ${shown.length} ${shown.length === 1 ? 'book' : 'books'}`}
                 placeholderTextColor={colors.subtle}
                 style={s.searchInput}
                 accessibilityLabel="Search library"
@@ -140,14 +182,31 @@ export function LibraryScreen({ books, status, busy, importFolder, onImport, onB
                       <Icon name="folder" color={colors.gold} />
                     </View>
                     <Text style={s.folderName}>{child.split('/').pop()}</Text>
-                    <Icon name="next" color={colors.subtle} size={18} />
+                    {editing ? (
+                      <IconButton
+                        name="close"
+                        label={`Remove ${child.split('/').pop()} from library`}
+                        onPress={() => onHide(child)}
+                      />
+                    ) : (
+                      <Icon name="next" color={colors.subtle} size={18} />
+                    )}
                   </Pressable>
                 ))
               : null}
             {rows.map(book => (
-              <BookRow key={book.id} book={book} status={status} onPress={() => onBook(book)} />
+              <BookRow
+                key={book.id}
+                book={book}
+                status={status}
+                onPress={() => onBook(book)}
+                onRemove={editing ? () => onHide(book.path) : undefined}
+              />
             ))}
-            {filtered.length === 0 ? <Text style={s.noResults}>No books match “{query}”.</Text> : null}
+            {filtered.length === 0 && query ? <Text style={s.noResults}>No books match “{query}”.</Text> : null}
+            {shown.length === 0 && !editing ? (
+              <Action label="Show removed books" onPress={() => setEditing(true)} style={s.addMore} />
+            ) : null}
             <Action
               icon="plus"
               label="Add folder"
@@ -163,7 +222,15 @@ export function LibraryScreen({ books, status, busy, importFolder, onImport, onB
   );
 }
 
-function BookRow({ book, status, onPress }: { book: IBook; status: IStatus; onPress: () => void }) {
+interface IBookRowProps {
+  book: IBook;
+  status: IStatus;
+  onPress: () => void;
+  /** Shown while editing the library. */
+  onRemove?: () => void;
+}
+
+function BookRow({ book, status, onPress, onRemove }: IBookRowProps) {
   const { colors } = useTheme();
   const s = useStyles();
   const playback = bookPlayback(book, status);
@@ -189,7 +256,9 @@ function BookRow({ book, status, onPress }: { book: IBook; status: IStatus; onPr
         </Text>
         <Text style={[s.meta, playback.active && s.activeText]}>{meta}</Text>
       </View>
-      {playback.playing ? (
+      {onRemove ? (
+        <IconButton name="close" label={`Remove ${book.name} from library`} onPress={onRemove} />
+      ) : playback.playing ? (
         <Icon name="volume" size={20} color={colors.mint} />
       ) : (
         <Icon name="next" size={17} color={colors.subtle} />
@@ -246,6 +315,11 @@ const useStyles = createThemedStyles(colors =>
     note: { color: colors.subtle, fontFamily: fonts.regular, fontSize: 12, lineHeight: 17 },
 
     filters: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
+    tools: { flexDirection: 'row' },
+    editPanel: { backgroundColor: colors.surface, borderRadius: 20, padding: 14, marginTop: 8, gap: 6 },
+    hiddenTitle: { color: colors.text, fontFamily: fonts.bold, fontSize: 15, paddingHorizontal: 4, marginTop: 6 },
+    hiddenRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 4 },
+    hiddenPath: { flex: 1, color: colors.muted, fontFamily: fonts.regular, fontSize: 14, lineHeight: 19 },
     search: {
       flexDirection: 'row',
       alignItems: 'center',

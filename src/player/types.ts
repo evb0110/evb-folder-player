@@ -89,4 +89,7 @@ export interface IPlayerAdapter {
   openDownloads(): Promise<void>;
   isTipDismissed(id: string): Promise<boolean>;
   dismissTip(id: string): Promise<void>;
+  /** Paths of folders and books removed from the library list. Their files and positions stay. */
+  getHiddenFolders(): Promise<string[]>;
+  setHiddenFolders(paths: string[]): Promise<void>;
 }

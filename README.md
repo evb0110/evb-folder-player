@@ -2,7 +2,8 @@
 
 A private, offline Android audiobook player built with Expo 57, React Native, and a local Kotlin/Media3 module.
 
-- Read existing audio folders, including subfolders, with Android's folder picker. Optionally discover indexed device audio.
+- Read existing audio folders, including subfolders, with Android's folder picker. Optionally discover indexed device audio. A folder found both ways is listed once.
+- Remove folders or books from the library list with the pencil button. Their files stay on the phone and keep their positions, rescans leave them out, and the same view shows them again.
 - Add a book from a ZIP archive: open it with EVB Folder Player from Telegram, a browser download, or a file manager, or share it to the app. It is unpacked into a new folder inside your audiobook folder, including Windows archives with Cyrillic names, and appears in the library. The archive is deleted only when the app that shared it allows that.
 - Browse folders or books with natural filename ordering. Existing files are never moved, renamed, or deleted.
 - Keep independent listening positions for each folder. Resume the current book from the library or headphones.

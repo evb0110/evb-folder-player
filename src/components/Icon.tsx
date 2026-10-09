@@ -13,6 +13,7 @@ const paths = {
   bookmark: 'M6 3h12v18l-6-4-6 4Z',
   undo: 'M8 5L3 10l5 5M3 10h11a6 6 0 0 1 6 6v3',
   close: 'M6 6l12 12M18 6L6 18',
+  edit: 'M4 20h4L20 8l-4-4L4 16ZM14 6l4 4',
   check: 'M5 12l4 4L19 6',
   refresh: 'M20 4v6h-6M20 10a8 8 0 1 0-1 8',
   search: 'M16 16l5 5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0',

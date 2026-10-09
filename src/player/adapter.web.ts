@@ -293,6 +293,12 @@ export const player: IPlayerAdapter = {
   async dismissTip(id) {
     localStorage.setItem(`folder-player-tip-${id}`, 'dismissed');
   },
+  async getHiddenFolders() {
+    return JSON.parse(localStorage.getItem('folder-player-hidden-folders') || '[]') as string[];
+  },
+  async setHiddenFolders(paths) {
+    localStorage.setItem('folder-player-hidden-folders', JSON.stringify(paths));
+  },
 };
 
 // Headset next/previous are ignored on purpose; only natural chapter completion advances.

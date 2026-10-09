@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { player } from './adapter';
 import { sampleBook } from './sample';
-import { sortedBooks } from './format';
+import { sortedBooks, uniqueBooks } from './format';
 import type { IBook, IHistoryEntry, IStatus, TCommand, TImportMethod } from './types';
 
 const POLL_MS = 500;
@@ -25,6 +25,8 @@ export function usePlayer() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [importFolder, setImportFolder] = useState<string | null>(null);
+  const [hidden, setHidden] = useState<string[]>([]);
+  const hiddenChanges = useRef(0);
   const mounted = useRef(true);
   const finishedImport = useRef<number | null>(null);
 
@@ -37,17 +39,21 @@ export function usePlayer() {
   }, []);
 
   const refresh = useCallback(async () => {
-    const [library, state, journal, folder] = await Promise.all([
+    const changes = hiddenChanges.current;
+    const [library, state, journal, folder, removed] = await Promise.all([
       player.getLibrary(),
       player.getStatus(),
       player.getHistory(),
       player.getImportFolder(),
+      player.getHiddenFolders(),
     ]);
     if (!mounted.current) return;
-    setBooks(sortedBooks(library));
+    setBooks(sortedBooks(uniqueBooks(library)));
     updateStatus(state);
     setHistory(journal);
     setImportFolder(folder);
+    // A removal made while this refresh was reading is newer than what it read.
+    if (changes === hiddenChanges.current) setHidden(removed);
     setReady(true);
   }, [updateStatus]);
 
@@ -135,6 +141,23 @@ export function usePlayer() {
     [report, updateStatus],
   );
 
+  const saveHidden = useCallback(
+    (next: string[]) => {
+      hiddenChanges.current++;
+      setHidden(next);
+      player.setHiddenFolders(next).catch(report);
+    },
+    [report],
+  );
+  const hideFolder = useCallback(
+    (path: string) => saveHidden([...hidden.filter(item => item !== path), path]),
+    [hidden, saveHidden],
+  );
+  const showFolder = useCallback(
+    (path: string) => saveHidden(hidden.filter(item => item !== path)),
+    [hidden, saveHidden],
+  );
+
   const dismissMessage = useCallback(() => setMessage(null), []);
 
   return {
@@ -145,6 +168,9 @@ export function usePlayer() {
     busy,
     message,
     importFolder,
+    hidden,
+    hideFolder,
+    showFolder,
     dismissMessage,
     refresh,
     command,

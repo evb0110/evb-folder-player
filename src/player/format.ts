@@ -15,6 +15,55 @@ export function sortedBooks(books: IBook[]) {
   return [...books].sort((a, b) => naturalCompare(a.path, b.path));
 }
 
+const STORAGE_DOCUMENT = /^content:\/\/com\.android\.externalstorage\.documents\/tree\/[^/]+\/document\/([^/]+)$/;
+// Android 9 and older index absolute paths; newer versions index paths within the shared storage volume.
+const ABSOLUTE_PATH = /^\/storage\/(emulated\/\d+|[^/]+)(?:\/(.*))?$/;
+
+/**
+ * The storage volume and folder a book was read from, the same whether it came from a chosen folder or
+ * the device audio scan, or null for other sources.
+ */
+export function bookLocation(book: IBook): string | null {
+  if (book.root === 'device') {
+    const path = book.id.slice('device:'.length);
+    const absolute = ABSOLUTE_PATH.exec(path);
+    if (!absolute) return `primary:${path}`;
+    const volume = absolute[1].startsWith('emulated/') ? 'primary' : absolute[1].toLowerCase();
+    return `${volume}:${absolute[2] ?? ''}`;
+  }
+  const document = STORAGE_DOCUMENT.exec(book.id);
+  if (!document) return null;
+  const id = decodeURIComponent(document[1]);
+  const colon = id.indexOf(':');
+  return `${id.slice(0, colon).toLowerCase()}:${id.slice(colon + 1)}`;
+}
+
+/** The copy with the latest listening position, otherwise the one from a chosen folder. */
+function preferred(book: IBook, other: IBook) {
+  const saved = (book.progress?.savedAt ?? 0) - (other.progress?.savedAt ?? 0);
+  return saved ? saved > 0 : book.root !== 'device' && other.root === 'device';
+}
+
+/**
+ * One entry per folder. A folder reached through both a chosen folder and the device audio scan, or
+ * through two chosen folders that overlap, is in the library more than once. The other copies keep
+ * their positions and history; they are only left out of the list.
+ */
+export function uniqueBooks(books: IBook[]) {
+  const located = new Map<string, IBook>();
+  const others: IBook[] = [];
+  for (const book of books) {
+    const location = bookLocation(book);
+    if (location === null) {
+      others.push(book);
+      continue;
+    }
+    const kept = located.get(location);
+    if (!kept || preferred(book, kept)) located.set(location, book);
+  }
+  return [...others, ...located.values()];
+}
+
 export function percent(position = 0, duration = 0) {
   return duration > 0 ? Math.min(100, Math.max(0, (position / duration) * 100)) : 0;
 }
@@ -30,6 +79,11 @@ export function historyDate(time: number) {
 
 export function parentFolder(path: string) {
   return path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
+}
+
+/** Whether `path` is a removed folder or book, or lies inside a removed folder. */
+export function isHidden(path: string, hidden: string[]) {
+  return hidden.some(item => path === item || path.startsWith(`${item}/`));
 }
 
 /** Direct subfolders and books of `path` in a slash-separated book hierarchy. */

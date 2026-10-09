@@ -1,1 +1,5 @@
-OPPO, OnePlus and realme phones show playback controls on the lock screen only while Live Alerts allows music playback. The app now says so once, the first time you play: open Settings, search for Live Alerts and turn on Music playback.
+OPPO, OnePlus and realme phones show playback controls on the lock screen only while Live Alerts allows music playback. The app now says so once, the first time you play.
+
+A book found both in a chosen folder and by Scan device audio is listed once. Listening positions are kept.
+
+Remove folders or books from the library with the pencil button. The files stay on the phone.

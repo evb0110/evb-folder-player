@@ -150,11 +150,14 @@ function PlayerApp() {
             {screen === 'library' || (screen === 'player' && !selectedBook) ? (
               <LibraryScreen
                 books={model.books}
+                hidden={model.hidden}
                 status={status}
                 busy={model.busy}
                 importFolder={model.importFolder}
                 onImport={method => void model.importBooks(method)}
                 onBook={book => openBook(book.id)}
+                onHide={model.hideFolder}
+                onShow={model.showFolder}
                 onHistory={openHistory}
               />
             ) : null}

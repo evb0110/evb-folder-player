@@ -18,6 +18,8 @@ interface INativeAudio {
   openDownloads(): Promise<void>;
   isTipDismissed(id: string): Promise<boolean>;
   dismissTip(id: string): Promise<void>;
+  getHiddenFolders(): Promise<string>;
+  setHiddenFolders(paths: string): Promise<void>;
 }
 
 const native = requireNativeModule<INativeAudio>('FolderAudio');
@@ -59,4 +61,8 @@ export const player: IPlayerAdapter = {
   openDownloads: () => native.openDownloads(),
   isTipDismissed: id => native.isTipDismissed(id),
   dismissTip: id => native.dismissTip(id),
+  async getHiddenFolders() {
+    return JSON.parse(await native.getHiddenFolders()) as string[];
+  },
+  setHiddenFolders: paths => native.setHiddenFolders(JSON.stringify(paths)),
 };
