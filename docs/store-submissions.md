@@ -2,7 +2,7 @@
 
 | Store | Status | Account needed | Where |
 | --- | --- | --- | --- |
-| GitHub Releases | Published, v0.3.3 | none | <https://github.com/evb0110/evb-folder-player/releases> |
+| GitHub Releases | Published, v0.3.4 | none | <https://github.com/evb0110/evb-folder-player/releases> |
 | IzzyOnDroid | Not submitted; current AI policy conflicts with generated app code | Codeberg | <https://izzyondroid.org/docs/general/AppInclusionPolicy/#ai-policy> |
 | F-Droid | Submitted; hosted checks passed, maintainer review pending | GitLab | <https://gitlab.com/fdroid/fdroiddata/-/merge_requests/51066> |
 
@@ -54,6 +54,8 @@ The current [AI policy](https://izzyondroid.org/docs/general/AppInclusionPolicy/
 The inclusion request is [merge request !51066](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/51066), from the public [personal fork](https://gitlab.com/7149553/fdroiddata) branch `com.evb.folderplayer`. Continue changes and reviewer replies in this request; do not open a duplicate. The submitted metadata uses `AutoUpdateMode: Version`; the tag filter remains in `UpdateCheckMode`. GitLab's schema rejects `Version v%v`, even though the earlier lint check accepted it.
 
 Reviewer linsui asked for Node from Debian, so the recipe installs `nodejs` and `npm` from trixie (20.19.2 and 9.2.0) instead of the nodejs.org tarball; the reply is [note 3951933468](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/51066#note_3951933468). All nine jobs passed in the [merge-request pipeline](https://gitlab.com/7149553/fdroiddata/-/pipelines/2911367783) for metadata commit `063b93a3a21f040ddcffb95847c4343ab895f142`, checked on October 5, 2026. The hosted build used Debian's nodejs, reproduced the signed upstream APK and verified its signer; APK scanning passed. The Reports tab has two minor audio-storage permission notices and nine informational entries, explained in the request. Acceptance and publication still require F-Droid maintainer review.
+
+On October 13, 2026, community commenter seekme-seekyou asked for signed APKs in GitHub Releases ([note 4006394607](https://gitlab.com/fdroid/fdroiddata/-/merge_requests/51066#note_4006394607)). Every release tag already carries signed arm64-v8a and armeabi-v7a APKs, and the recipe's `Binaries` URL points at the arm64 one, so this needs a reply, not a change.
 
 F-Droid submissions are merge requests to the `fdroiddata` repository. Everything below can be done in the GitLab website.
 
