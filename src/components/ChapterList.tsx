@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import { createThemedStyles, fonts, useTheme } from '../theme';
 import { chapterTitles } from '../player/chapters';
 import { clockTime } from '../player/format';
@@ -86,6 +86,7 @@ export function ChapterList({ book, playback, onChoose }: IProps) {
   const s = useStyles();
   const currentId = playback.track?.id;
   const { rows, offsets, trackRows, parts } = useMemo(() => chapterRows(book), [book]);
+  const [height, setHeight] = useState(0);
   const [initialRow] = useState(() => {
     const memory = scrollMemory.get(book.id);
     const row =
@@ -93,9 +94,18 @@ export function ChapterList({ book, playback, onChoose }: IProps) {
     return Math.max(0, Math.min(row, rows.length - 1));
   });
 
+  // Sticky headings start from `contentOffset`; Android does not move them for the scroll to
+  // `initialScrollIndex` until the first touch. The list is measured first so the offset can be
+  // clamped the way the native scroll is near the end.
+  const initialOffset = Math.max(0, Math.min(offsets[initialRow], offsets[rows.length] - height));
+  const measure = (event: LayoutChangeEvent) => setHeight(height || event.nativeEvent.layout.height);
+
+  if (!height) return <View style={s.measure} onLayout={measure} />;
+
   return (
     <FlatList
       data={rows}
+      contentOffset={{ x: 0, y: initialOffset }}
       extraData={playback}
       keyExtractor={row => row.key}
       getItemLayout={(_, index) => ({ length: offsets[index + 1] - offsets[index], offset: offsets[index], index })}
@@ -153,6 +163,7 @@ export function ChapterList({ book, playback, onChoose }: IProps) {
 
 const useStyles = createThemedStyles(colors =>
   StyleSheet.create({
+    measure: { flex: 1 },
     part: {
       height: PART_HEIGHT,
       justifyContent: 'center',
