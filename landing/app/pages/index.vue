@@ -27,7 +27,7 @@
 
         <div class="hero-get">
           <div class="downloads">
-            <a class="download-row" v-bind="download(arm64)">
+            <a class="download-row" v-bind="download('arm64-v8a')">
               <UIcon class="download-icon" name="i-lucide-download" />
               <span class="download-copy">
                 <strong>{{ arm64 ? 'Download for Android' : 'Get it on GitHub Releases' }}</strong>
@@ -40,9 +40,9 @@
             </a>
             <p class="download-note">arm64-v8a · For most Android phones.</p>
             <div class="download-links">
-              <a v-bind="download(release?.assets['armeabi-v7a'])">Older 32-bit phones (armeabi-v7a)</a>
+              <a v-bind="download('armeabi-v7a')">Older 32-bit phones (armeabi-v7a)</a>
               <span class="release-links">
-                <a v-bind="download(release?.assets.checksums)">SHA256SUMS</a>
+                <a v-bind="download('checksums')">SHA256SUMS</a>
                 <span aria-hidden="true">·</span>
                 <a :href="RELEASES_URL" v-bind="NEW_TAB">All releases</a>
               </span>
@@ -181,7 +181,7 @@
             <span class="step-number" aria-hidden="true">02</span>
             <h3>Verify the download</h3>
             <p>
-              Download <a v-bind="download(release?.assets.checksums)">SHA256SUMS</a> into the same folder as the APK.
+              Download <a v-bind="download('checksums')">SHA256SUMS</a> into the same folder as the APK.
               Check it on your computer:
             </p>
             <span class="command-label">macOS</span>
@@ -235,7 +235,7 @@
 </template>
 
 <script setup lang="ts">
-import { RELEASES_URL, REPOSITORY_URL, type IReleaseAsset, type ILatestRelease } from '#shared/release';
+import { downloadPath, RELEASES_URL, REPOSITORY_URL, type ILatestRelease, type TReleaseAsset } from '#shared/release';
 import { SCREENSHOTS, STORES } from '#shared/site';
 import film from '~/films/player.json';
 
@@ -321,9 +321,12 @@ function step(delta: number) {
 const { data: release } = await useFetch<ILatestRelease | null>('/api/release', { default: () => null });
 const arm64 = computed(() => release.value?.assets['arm64-v8a']);
 
-/** A release asset downloads in place; without it, the releases page opens in a new tab. */
-function download(asset: IReleaseAsset | undefined) {
-  return asset ? { href: asset.url } : { href: RELEASES_URL, ...NEW_TAB };
+/**
+ * A release file downloads in place through the landing's own address; without it, the releases
+ * page opens in a new tab.
+ */
+function download(key: TReleaseAsset) {
+  return release.value?.assets[key] ? { href: downloadPath(key) } : { href: RELEASES_URL, ...NEW_TAB };
 }
 
 function formatSize(bytes: number) {
@@ -369,7 +372,7 @@ const structuredData = computed(() => ({
       applicationCategory: 'MultimediaApplication',
       softwareVersion: release.value?.version,
       dateModified: release.value?.publishedAt,
-      downloadUrl: arm64.value?.url ?? RELEASES_URL,
+      downloadUrl: arm64.value ? `${siteUrl}${downloadPath('arm64-v8a')}` : RELEASES_URL,
       fileSize: arm64.value ? formatSize(arm64.value.size) : undefined,
       isAccessibleForFree: true,
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },

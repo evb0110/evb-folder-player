@@ -50,3 +50,27 @@ export function selectRelease(release: IGithubRelease): ILatestRelease {
     assets,
   };
 }
+
+export const RELEASE_ASSETS: TReleaseAsset[] = ['arm64-v8a', 'armeabi-v7a', 'checksums'];
+
+/**
+ * The landing's own address for a release file. Links to github.com open the GitHub app on phones
+ * that have it, which hands the download to a Chrome Custom Tab that never finishes saving the APK.
+ */
+export function downloadPath(asset: TReleaseAsset) {
+  return `/download/${asset}`;
+}
+
+/** Hosts GitHub serves release files from after redirecting a github.com download link. */
+const FILE_HOSTS = new Set(['release-assets.githubusercontent.com', 'objects.githubusercontent.com']);
+
+/** Whether a redirect from GitHub points at its file servers, so the landing can send visitors there. */
+export function isGithubFileUrl(location: string | null | undefined): location is string {
+  if (!location) return false;
+  try {
+    const url = new URL(location);
+    return url.protocol === 'https:' && FILE_HOSTS.has(url.hostname);
+  } catch {
+    return false;
+  }
+}

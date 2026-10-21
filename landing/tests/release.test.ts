@@ -45,3 +45,17 @@ test('leaves missing assets absent and rejects unrelated or partial filenames', 
   );
   assert.deepEqual(release.assets, {});
 });
+
+test('downloads go through the landing and only on to GitHub file servers', async () => {
+  const { downloadPath, isGithubFileUrl } = await import('../shared/release.ts');
+  assert.equal(downloadPath('arm64-v8a'), '/download/arm64-v8a');
+  assert.equal(downloadPath('checksums'), '/download/checksums');
+  assert.ok(isGithubFileUrl('https://release-assets.githubusercontent.com/github-production-release-asset/1/2?sp=r'));
+  assert.ok(isGithubFileUrl('https://objects.githubusercontent.com/github-production-release-asset-2e65be/1/2'));
+  // github.com itself is what the GitHub app intercepts; other hosts and plain HTTP are refused.
+  assert.ok(!isGithubFileUrl('https://github.com/evb0110/evb-folder-player/releases/download/v0.3.5/x.apk'));
+  assert.ok(!isGithubFileUrl('https://release-assets.githubusercontent.com.example.com/x'));
+  assert.ok(!isGithubFileUrl('http://objects.githubusercontent.com/x'));
+  assert.ok(!isGithubFileUrl(null));
+  assert.ok(!isGithubFileUrl('not a url'));
+});
