@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import { useLandscape } from '../frame';
 import { createThemedStyles, fonts, touch, useTheme } from '../theme';
+import { chapterTitle, sameTitle } from '../player/chapters';
 import { clockTime } from '../player/format';
 import { BOOSTS, bookPlayback, sleepMinutesLeft, SLEEP_MINUTES, SPEEDS, type IBookPlayback } from '../player/playback';
 import type { TRunCommand } from '../player/usePlayer';
@@ -61,7 +62,7 @@ export function PlayerScreen({ book, status, tab, onTab, onBack, onCarMode, onHi
       {tab === 'chapters' ? (
         <>
           <ChapterList book={book} playback={playback} onChoose={chooseTrack} />
-          <Dock playback={playback} controls={controls} onExpand={() => onTab('listen')} />
+          <Dock book={book} playback={playback} controls={controls} onExpand={() => onTab('listen')} />
         </>
       ) : (
         <ListenView
@@ -106,9 +107,12 @@ function ListenView({ book, status, playback, controls, command, onChapters, onH
   const [area, setArea] = useState({ width: 0, height: 0 });
   const [titlesHeight, setTitlesHeight] = useState(0);
   const sleepLeft = sleepMinutesLeft(status.sleepAt);
+  const chapter = chapterTitle(book, playback.track);
+  // A single file named after its folder would only repeat the book's name.
+  const chapterName = chapter.title && !sameTitle(chapter.title, book.name) ? chapter.title : '';
 
-  // The cover takes whatever height the titles and controls leave, and disappears on short screens.
-  // The cover gets exactly the height the measured titles leave, and disappears on short screens.
+  // The cover gets the height the measured titles leave, and disappears on short screens. Titles are
+  // never cut short; when even they do not fit, the area scrolls.
   const fittedCover = Math.min(
     240,
     area.width * 0.62,
@@ -120,18 +124,29 @@ function ListenView({ book, status, playback, controls, command, onChapters, onH
 
   return (
     <View style={[s.listen, landscape && s.listenLandscape]}>
-      <View style={s.info} onLayout={(event: LayoutChangeEvent) => setArea(event.nativeEvent.layout)}>
+      <ScrollView
+        style={s.info}
+        contentContainerStyle={s.infoContent}
+        onLayout={(event: LayoutChangeEvent) => setArea(event.nativeEvent.layout)}
+      >
         {coverSize ? <BookCover title={book.name} size={coverSize} large style={s.cover} /> : null}
         <View
           style={s.titles}
           onLayout={(event: LayoutChangeEvent) => setTitlesHeight(event.nativeEvent.layout.height)}
         >
-          <Text style={s.bookTitle} numberOfLines={2}>
-            {book.name}
-          </Text>
-          <Text style={s.chapterTitle} numberOfLines={2}>
-            {playback.track?.title}
-          </Text>
+          {chapterName ? (
+            <>
+              <Text style={s.bookName}>{book.name}</Text>
+              {chapter.part ? <Text style={s.part}>{chapter.part}</Text> : null}
+              <Text style={s.chapterTitle} accessibilityRole="header">
+                {chapterName}
+              </Text>
+            </>
+          ) : (
+            <Text style={s.chapterTitle} accessibilityRole="header">
+              {book.name}
+            </Text>
+          )}
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Show chapters"
@@ -144,7 +159,7 @@ function ListenView({ book, status, playback, controls, command, onChapters, onH
             <Icon name="next" size={14} color={colors.subtle} />
           </Pressable>
         </View>
-      </View>
+      </ScrollView>
 
       <View style={[s.controls, landscape && s.controlsLandscape]}>
         <PositionSlider
@@ -221,7 +236,8 @@ function ListenView({ book, status, playback, controls, command, onChapters, onH
             onPress={() => toggleMenu('sleep')}
           />
           <Tool
-            label="Bookmark"
+            label="Mark"
+            accessibilityLabel="Bookmark this position"
             icon="bookmark"
             disabled={!playback.active}
             onPress={() => void command({ action: 'bookmark' })}
@@ -264,7 +280,12 @@ function Tool({ label, accessibilityLabel, icon, text, active, disabled, onPress
       style={({ pressed }) => [s.tool, pressed && s.pressed, disabled && s.disabled]}
     >
       {icon ? <Icon name={icon} color={color} size={22} /> : <Text style={[s.toolText, { color }]}>{text}</Text>}
-      <Text style={[s.toolLabel, active && { color: colors.mint }]} numberOfLines={1}>
+      <Text
+        style={[s.toolLabel, active && { color: colors.mint }]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.75}
+      >
         {label}
       </Text>
     </Pressable>
@@ -272,13 +293,14 @@ function Tool({ label, accessibilityLabel, icon, text, active, disabled, onPress
 }
 
 interface IDockProps {
+  book: IBook;
   playback: IBookPlayback;
   controls: ITransportActions;
   onExpand: () => void;
 }
 
 /** Compact controls under the chapter list, so the list keeps most of the screen. */
-function Dock({ playback, controls, onExpand }: IDockProps) {
+function Dock({ book, playback, controls, onExpand }: IDockProps) {
   const s = useStyles();
   const [scrub, setScrub] = useState<number | null>(null);
   const shown = scrub ?? playback.position;
@@ -303,7 +325,7 @@ function Dock({ playback, controls, onExpand }: IDockProps) {
         >
           <View style={s.dockTitles}>
             <Text style={s.dockTitle} numberOfLines={1}>
-              {playback.track?.title}
+              {chapterTitle(book, playback.track).title}
             </Text>
             <Text style={s.dockTime}>{time}</Text>
           </View>
@@ -330,8 +352,9 @@ const useStyles = createThemedStyles(colors =>
 
     listen: { flex: 1 },
     listenLandscape: { flexDirection: 'row', alignItems: 'center' },
-    info: {
-      flex: 1,
+    info: { flex: 1, alignSelf: 'stretch' },
+    infoContent: {
+      flexGrow: 1,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 28,
@@ -339,22 +362,31 @@ const useStyles = createThemedStyles(colors =>
     },
     titles: { alignSelf: 'stretch', alignItems: 'center' },
     cover: { marginBottom: COVER_GAP },
-    bookTitle: {
+    bookName: {
+      alignSelf: 'stretch',
+      fontFamily: fonts.medium,
+      color: colors.muted,
+      fontSize: 15,
+      lineHeight: 21,
+      textAlign: 'center',
+    },
+    part: {
+      alignSelf: 'stretch',
+      fontFamily: fonts.regular,
+      color: colors.subtle,
+      fontSize: 14,
+      lineHeight: 20,
+      textAlign: 'center',
+      marginTop: 2,
+    },
+    chapterTitle: {
       alignSelf: 'stretch',
       fontFamily: fonts.display,
       color: colors.text,
       fontSize: 24,
       lineHeight: 31,
       textAlign: 'center',
-    },
-    chapterTitle: {
-      alignSelf: 'stretch',
-      fontFamily: fonts.regular,
-      color: colors.muted,
-      fontSize: 15,
-      lineHeight: 21,
-      textAlign: 'center',
-      marginTop: 6,
+      marginTop: 8,
     },
     chapterLink: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: touch.min, paddingHorizontal: 16 },
     chapterCount: { fontFamily: fonts.medium, color: colors.subtle, fontSize: 13 },

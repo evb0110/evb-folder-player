@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 import { useKeepAwake } from 'expo-keep-awake';
 import { useLandscape } from '../frame';
 import { createThemedStyles, fonts } from '../theme';
+import { chapterTitle, sameTitle } from '../player/chapters';
 import { bookPlayback } from '../player/playback';
 import type { TRunCommand } from '../player/usePlayer';
 import type { IBook, IStatus } from '../player/types';
@@ -33,6 +34,8 @@ export function CarMode({ book, status, keepAwake, onKeepAwake, onExit, onUndo, 
   const s = useStyles();
   const landscape = useLandscape();
   const playback = bookPlayback(book, status);
+  const chapter = chapterTitle(book, playback.track).title;
+  const chapterName = chapter && !sameTitle(chapter, book.name) ? chapter : '';
   const [area, setArea] = useState({ width: 0, height: 0 });
   const toggle = () => void command(playback.active ? { action: 'toggle' } : { action: 'open', bookId: book.id });
   const skip = (delta: number) => void command({ action: 'skip', delta });
@@ -64,11 +67,14 @@ export function CarMode({ book, status, keepAwake, onKeepAwake, onExit, onUndo, 
       />
       <View style={[s.body, landscape && s.bodyLandscape]}>
         <View style={[s.info, landscape && s.infoLandscape]}>
-          <Text style={s.book} numberOfLines={2}>
-            {book.name}
-          </Text>
-          <Text style={s.chapter} numberOfLines={2}>
-            {playback.track?.title}
+          {/* The story is what a driver glances at; the book's name stays smaller above it. */}
+          {chapterName ? (
+            <Text style={s.book} numberOfLines={2}>
+              {book.name}
+            </Text>
+          ) : null}
+          <Text style={s.chapter} numberOfLines={3}>
+            {chapterName || book.name}
           </Text>
           <View style={s.position}>
             <PositionSlider
@@ -116,20 +122,20 @@ const useStyles = createThemedStyles(colors =>
     infoLandscape: { width: '32%' },
     book: {
       alignSelf: 'stretch',
-      color: colors.text,
-      fontFamily: fonts.display,
-      fontSize: 24,
-      lineHeight: 31,
-      textAlign: 'center',
-    },
-    chapter: {
-      alignSelf: 'stretch',
       color: colors.muted,
-      fontFamily: fonts.regular,
+      fontFamily: fonts.medium,
       fontSize: 16,
       lineHeight: 22,
       textAlign: 'center',
-      marginTop: 6,
+      marginBottom: 4,
+    },
+    chapter: {
+      alignSelf: 'stretch',
+      color: colors.text,
+      fontFamily: fonts.display,
+      fontSize: 26,
+      lineHeight: 33,
+      textAlign: 'center',
     },
     position: { alignSelf: 'stretch', marginTop: 8 },
     controls: { flex: 1, alignItems: 'center', justifyContent: 'center' },

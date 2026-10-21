@@ -178,6 +178,7 @@ function PlayerApp() {
             {screen === 'history' ? (
               <HistoryScreen
                 history={model.history}
+                books={model.books}
                 canUndo={status.canUndo}
                 onBack={back}
                 onUndo={undo}

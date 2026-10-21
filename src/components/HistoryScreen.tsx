@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { createThemedStyles, fonts, useTheme } from '../theme';
+import { chapterTitle } from '../player/chapters';
 import { clockTime, historyDate } from '../player/format';
-import type { IHistoryEntry } from '../player/types';
+import type { IBook, IHistoryEntry } from '../player/types';
 import { Action, IconButton, Segmented } from './Controls';
 import { Header } from './Header';
 import { Icon, type TIcon } from './Icon';
@@ -22,13 +23,14 @@ function reasonIcon(reason: string): TIcon {
 
 interface IProps {
   history: IHistoryEntry[];
+  books: IBook[];
   canUndo: boolean;
   onBack: () => void;
   onUndo: () => void;
   onRestore: (entry: IHistoryEntry) => void;
 }
 
-export function HistoryScreen({ history, canUndo, onBack, onUndo, onRestore }: IProps) {
+export function HistoryScreen({ history, books, canUndo, onBack, onUndo, onRestore }: IProps) {
   const { colors } = useTheme();
   const s = useStyles();
   const [filter, setFilter] = useState<TFilter>('all');
@@ -55,10 +57,12 @@ export function HistoryScreen({ history, canUndo, onBack, onUndo, onRestore }: I
         }
         renderItem={({ item }) => {
           const bookmark = item.reason === 'Bookmark';
+          const book = books.find(candidate => candidate.id === item.bookId);
+          const chapter = chapterTitle(book, { id: item.trackId, title: item.trackTitle });
           return (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`Restore ${item.trackTitle} at ${clockTime(item.position)}`}
+              accessibilityLabel={`Restore ${chapter.full} at ${clockTime(item.position)}`}
               style={({ pressed }) => [s.entry, pressed && s.pressed]}
               onPress={() => onRestore(item)}
             >
@@ -67,8 +71,8 @@ export function HistoryScreen({ history, canUndo, onBack, onUndo, onRestore }: I
                 <Text style={s.book} numberOfLines={1}>
                   {item.bookName}
                 </Text>
-                <Text style={s.track} numberOfLines={1}>
-                  {item.trackTitle}
+                <Text style={s.track} numberOfLines={2}>
+                  {chapter.title}
                 </Text>
                 <Text style={s.meta} numberOfLines={1}>
                   {item.reason} · {historyDate(item.time)}
@@ -107,7 +111,7 @@ const useStyles = createThemedStyles(colors =>
     },
     entryInfo: { flex: 1, gap: 2 },
     book: { fontFamily: fonts.medium, fontSize: 16, lineHeight: 22, color: colors.text },
-    track: { fontFamily: fonts.regular, color: colors.muted, fontSize: 12, lineHeight: 17 },
+    track: { fontFamily: fonts.regular, color: colors.muted, fontSize: 13, lineHeight: 18 },
     meta: { fontFamily: fonts.regular, color: colors.subtle, fontSize: 12, lineHeight: 17 },
     position: { fontFamily: fonts.bold, fontSize: 14, color: colors.mint, fontVariant: ['tabular-nums'] },
     empty: { alignItems: 'center', paddingTop: 64 },

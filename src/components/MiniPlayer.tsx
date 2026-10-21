@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { createThemedStyles, fonts, touch } from '../theme';
+import { chapterTitle } from '../player/chapters';
 import { percent } from '../player/format';
 import type { IBook, IStatus } from '../player/types';
 import { Progress } from './Controls';
@@ -29,7 +30,7 @@ export function MiniPlayer({ book, status, onOpen, onToggle }: IProps) {
               {book.name}
             </Text>
             <Text style={s.chapter} numberOfLines={1}>
-              {status.trackTitle}
+              {status.trackId ? chapterTitle(book, { id: status.trackId, title: status.trackTitle ?? '' }).title : ''}
             </Text>
           </View>
         </Pressable>

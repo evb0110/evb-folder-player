@@ -35,20 +35,21 @@ export function BookCover({ title, size = 64, large = false, style }: IProps) {
           {title}
         </Text>
       ) : null}
+      {/* Large covers show only the waves, so the art stays clear of a three-line title. */}
       <Svg
         width={size * 0.78}
-        height={size * (large ? 0.58 : 0.8)}
-        viewBox="0 0 100 90"
+        height={size * (large ? 0.36 : 0.8)}
+        viewBox={large ? '0 42 100 48' : '0 0 100 90'}
         style={large ? s.artLarge : s.art}
       >
-        <Circle cx="68" cy="25" r="13" fill="none" stroke={ink} strokeWidth="1" />
+        {large ? null : <Circle cx="68" cy="25" r="13" fill="none" stroke={ink} strokeWidth="1" />}
         <Path
           d="M4 72Q25 27 48 61T98 64M4 80Q32 48 54 70T98 73M8 87Q44 69 67 82T96 83"
           stroke={ink}
           strokeWidth="1.5"
           fill="none"
         />
-        <Line x1="49" y1="14" x2="49" y2="36" stroke={ink} strokeWidth="0.6" />
+        {large ? null : <Line x1="49" y1="14" x2="49" y2="36" stroke={ink} strokeWidth="0.6" />}
       </Svg>
     </View>
   );

@@ -1,0 +1,5 @@
+The player shows the whole name of the chapter you are listening to, with the book and collection above it.
+
+File numbers and names repeated in every file, such as a collection title, are no longer shown in each chapter. The chapter list groups stories under that title.
+
+Car mode, the mini player and History show the chapter's own name.
