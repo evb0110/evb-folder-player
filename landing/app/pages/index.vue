@@ -271,7 +271,7 @@ const features = [
   {
     icon: 'i-lucide-folder-tree',
     title: 'Your folders, in order',
-    text: 'Choose an audio folder, including subfolders, or scan indexed device audio. Books and chapters follow natural filename ordering. Remove a folder from the list at any time; its files stay on your phone.',
+    text: 'Choose an audio folder, including subfolders, or scan indexed device audio. Books and chapters follow natural filename ordering, and chapter names are shown in full, grouped by collection. Remove a folder from the list at any time; its files stay on your phone.',
   },
   {
     icon: 'i-lucide-history',

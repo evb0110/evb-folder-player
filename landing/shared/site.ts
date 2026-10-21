@@ -16,7 +16,7 @@ export const SCREENSHOTS = [
   {
     id: 2,
     title: 'Pick up your book',
-    alt: 'Audiobook player showing A Quieter Chapter, saved position, play and 20-second jumps, speed, volume boost, sleep timer, bookmark, undo and history controls.',
+    alt: 'Audiobook player with the chapter A place to begin as its heading under the book A Quieter Chapter, saved position, play and 20-second jumps, speed, volume boost, sleep timer, bookmark, undo and history controls.',
   },
   {
     id: 3,
