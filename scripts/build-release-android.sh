@@ -59,7 +59,8 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 fleet-host check "$host" </dev/null
 remote="$(ssh "$host" 'mkdir -p ~/.devkit/folder-player-release; mktemp -d ~/.devkit/folder-player-release/run.XXXXXX')"
-[[ "$remote" =~ ^/home/evb/\.devkit/folder-player-release/run\.[a-zA-Z0-9]+$ ]]
+# Cleanup removes this directory, so it must be a run directory under a home folder.
+[[ "$remote" =~ ^/home/[a-z_][a-z0-9_-]*/\.devkit/folder-player-release/run\.[a-zA-Z0-9]+$ ]]
 git bundle create "$scratch/source.bundle" HEAD
 git show "$commit:docs/fdroid/com.evb.folderplayer.yml" > "$scratch/recipe.yml"
 git show "$commit:app.json" > "$scratch/app.json"
