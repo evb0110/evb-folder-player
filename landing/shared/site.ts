@@ -4,7 +4,7 @@ interface IStore {
 }
 
 // Set each URL to its confirmed listing to turn its in-review card into a link.
-export const STORES: IStore[] = [{ name: 'F-Droid', url: null }];
+export const STORES: IStore[] = [{ name: 'F-Droid', url: 'https://f-droid.org/packages/com.evb.folderplayer/' }];
 
 // Store screenshots in public/screenshots/<id>.png, in gallery order.
 export const SCREENSHOTS = [

@@ -204,8 +204,11 @@
       </section>
 
       <section class="stores" aria-labelledby="stores-title">
-        <h2 id="stores-title" class="section-title">More ways to install, soon</h2>
-        <p class="section-lede">An F-Droid submission is in review. For now, download from GitHub.</p>
+        <h2 id="stores-title" class="section-title">Also on F-Droid</h2>
+        <p class="section-lede">
+          F-Droid builds each release from source and ships the same signed APK, usually a few days after it appears
+          here.
+        </p>
         <div class="store-grid">
           <component
             :is="store.url ? 'a' : 'div'"

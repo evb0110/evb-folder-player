@@ -23,7 +23,7 @@ Download an APK from [GitHub Releases](https://github.com/evb0110/evb-folder-pla
 
 Each release also has `SHA256SUMS`. Check a download with `shasum -a 256 -c SHA256SUMS --ignore-missing` on macOS or `sha256sum -c SHA256SUMS --ignore-missing` on Linux.
 
-F-Droid: submission in review.
+F-Droid: [com.evb.folderplayer](https://f-droid.org/packages/com.evb.folderplayer/). F-Droid builds each tagged release from source and ships the same signed APK, usually a few days after GitHub.
 
 [Obtainium](https://github.com/ImranR98/Obtainium) can check for updates from the GitHub Releases URL above. Select the APK for your phone's architecture. Install updates over the existing app to keep your library and listening history.
 
