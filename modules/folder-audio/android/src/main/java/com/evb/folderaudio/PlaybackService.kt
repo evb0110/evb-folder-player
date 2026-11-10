@@ -41,7 +41,10 @@ class PlaybackService : MediaSessionService() {
   private var expectedPosition: Long? = null
   private var pendingUndoId: Long? = null
   private var changing = false
+  /** The player failed. Nothing is saved until the last saved position is loaded again. */
   private var error: String? = null
+  /** A command that could not run. The player is unaffected and keeps saving. */
+  private var notice: String? = null
   private var lastSave = 0L
   private var lastHeadsetToggle = 0L
   private var sleepAt = 0L
@@ -110,6 +113,10 @@ class PlaybackService : MediaSessionService() {
       override fun seekToNextMediaItem() = Unit
       override fun seekToPrevious() = Unit
       override fun seekToPreviousMediaItem() = Unit
+      // The lock screen, the notification and Bluetooth play keys recover a failed player the same
+      // way the app and headset clicks do. Restarting it where it stopped would play on unsaved.
+      override fun play() = command("play", JSONObject())
+      override fun prepare() { if (needsReload()) command("reload", JSONObject()) else super.prepare() }
       // Lock-screen and notification jumps take the same path as the app's, including a seek during restore.
       override fun seekBack() = command("skip", JSONObject().put("delta", -seekBackIncrement))
       override fun seekForward() = command("skip", JSONObject().put("delta", seekForwardIncrement))
@@ -221,16 +228,26 @@ class PlaybackService : MediaSessionService() {
       player.playWhenReady = play
     } finally { changing = false }
   }
+  /** Empty, or failed: playback has to start again from the last saved position. */
+  private fun needsReload() = player.mediaItemCount == 0 || error != null
+  private fun reload(play: Boolean) {
+    val saved = store.current()
+    val target = store.book(saved.optString("bookId")) ?: return
+    load(target, saved.optString("trackId").takeIf { it.isNotEmpty() }, saved.optLong("position"), play)
+  }
+  /** Every play request, from the app, a headset, the lock screen or the notification. */
+  private fun resume() {
+    if (needsReload()) { reload(true); return }
+    if (player.playbackState == Player.STATE_ENDED) player.seekTo(0)
+    if (player.playbackState == Player.STATE_IDLE) player.prepare()
+    player.play()
+  }
   private fun toggle() {
-    if (player.mediaItemCount == 0 || error != null) {
-      val saved = store.current()
-      val target = store.book(saved.optString("bookId")) ?: return
-      load(target, saved.optString("trackId").takeIf { it.isNotEmpty() }, saved.optLong("position"), true)
-    } else if (player.playbackState == Player.STATE_ENDED) {
-      player.seekTo(0); player.play()
-    } else if (player.playWhenReady) player.pause() else player.play()
+    val running = player.playWhenReady && (player.playbackState == Player.STATE_BUFFERING || player.playbackState == Player.STATE_READY)
+    if (running && !needsReload()) player.pause() else resume()
   }
   fun command(action: String, data: JSONObject) {
+    notice = null
     try {
       when (action) {
         "open" -> {
@@ -248,6 +265,8 @@ class PlaybackService : MediaSessionService() {
           }
         }
         "toggle" -> toggle()
+        "play" -> resume()
+        "reload" -> reload(false)
         "pause" -> player.pause()
         "seek", "skip" -> {
           if (player.mediaItemCount == 0) {
@@ -281,13 +300,13 @@ class PlaybackService : MediaSessionService() {
         "boost" -> { boost = data.getInt("boost").coerceIn(0, 12); store.write("boost", boost.toString()); applyBoost() }
         "sleep" -> { val minutes = data.getLong("minutes"); sleepAt = if (minutes > 0) System.currentTimeMillis() + minutes * 60000 else 0 }
       }
-    } catch (failure: Exception) { error = failure.message ?: "Playback could not continue." }
+    } catch (failure: Exception) { notice = failure.message ?: "Playback could not continue." }
   }
   fun status(): JSONObject {
     val current = if (expectedPosition == null && error == null) point() ?: store.current() else store.current()
     return JSONObject(current.toString()).put("playing", player.isPlaying).put("loading", expectedPosition != null && error == null)
       .put("position", expectedPosition ?: current.optLong("position")).put("speed", player.playbackParameters.speed.toDouble()).put("boost", boost)
-      .put("sleepAt", sleepAt).put("error", error ?: JSONObject.NULL).put("canUndo", store.undoPoint() != null)
+      .put("sleepAt", sleepAt).put("error", notice ?: error ?: JSONObject.NULL).put("canUndo", store.undoPoint() != null)
   }
   override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = session
   override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

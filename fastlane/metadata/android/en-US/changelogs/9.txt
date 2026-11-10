@@ -1,0 +1,5 @@
+Resuming no longer goes back to an older position.
+
+After a file could not be read, play on the lock screen, in the notification or on Bluetooth headphones continued without saving your place, and a later resume returned to where it was last saved. Every play now starts from your saved place and keeps saving.
+
+A failed action, such as opening a removed folder, no longer stops saving your place while a book plays.

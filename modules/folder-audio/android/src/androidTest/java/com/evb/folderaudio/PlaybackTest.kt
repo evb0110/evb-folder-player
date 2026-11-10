@@ -181,6 +181,44 @@ class PlaybackTest {
     assertEquals(28000, store.current().getLong("position"))
     assertEquals("missing", store.current().getString("bookId"))
   }
+  @Test fun failedCommandKeepsSavingProgress() {
+    command("toggle")
+    await("playing") { status().optBoolean("playing") }
+    command("open", JSONObject().put("bookId", "removed"))
+    await("failure reported") { !status().isNull("error") }
+    assertTrue(status().optBoolean("playing"))
+    // The ticker saves every five seconds; a failed command must not stop it.
+    await("progress saved after the failure") { store.current().getLong("position") >= 16000 }
+  }
+  @Test fun playAfterAPlaybackFailureResumesTheSavedPositionAndKeepsSaving() {
+    // The file is missing on the first attempt, as after a storage or read failure, and back later.
+    val file = java.io.File(context.cacheDir, "late-chapter.wav").also { it.delete() }
+    val late = book("late")
+    late.getJSONArray("tracks").getJSONObject(0).put("uri", android.net.Uri.fromFile(file).toString())
+    store.replaceRoot("test", listOf(book(), late))
+    store.save(point("late", 12000))
+    command("toggle")
+    await("read failure") { !status().isNull("error") }
+    context.assets.open("chapter-01.wav").use { input -> file.outputStream().use { input.copyTo(it) } }
+    // Lock-screen play and a Bluetooth play key reach the player through the media session.
+    val lockScreen = platformController()
+    main { lockScreen.transportControls.play() }
+    await("lock-screen play resumes") { status().optBoolean("playing") && status().isNull("error") }
+    assertTrue(kotlin.math.abs(status().getLong("position") - 12000) < 1800)
+    await("progress saved after the recovery") { store.current().getLong("position") >= 16000 }
+    val heard = status().getLong("position")
+    // A headset click then pauses where playback is, instead of reloading the last good save.
+    main {
+      lockScreen.dispatchMediaButtonEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_HEADSETHOOK))
+      lockScreen.dispatchMediaButtonEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_HEADSETHOOK))
+    }
+    await("headset pauses") { !status().optBoolean("playing") }
+    SystemClock.sleep(1000)
+    assertFalse(status().optBoolean("playing"))
+    assertTrue("Paused at ${status().getLong("position")}, heard $heard", status().getLong("position") >= heard)
+    assertTrue("Saved ${store.current().getLong("position")} for ${status().getLong("position")}", kotlin.math.abs(status().getLong("position") - store.current().getLong("position")) < 500)
+    file.delete()
+  }
   @Test fun mediaSessionCanResumeWithoutOpeningTheReactScreen() {
     val token = SessionToken(context, android.content.ComponentName(context, PlaybackService::class.java))
     lateinit var future: com.google.common.util.concurrent.ListenableFuture<MediaController>

@@ -181,8 +181,8 @@
             <span class="step-number" aria-hidden="true">02</span>
             <h3>Verify the download</h3>
             <p>
-              Download <a v-bind="download('checksums')">SHA256SUMS</a> into the same folder as the APK.
-              Check it on your computer:
+              Download <a v-bind="download('checksums')">SHA256SUMS</a> into the same folder as the APK. Check it on
+              your computer:
             </p>
             <span class="command-label">macOS</span>
             <code>shasum -a 256 -c SHA256SUMS --ignore-missing</code>
