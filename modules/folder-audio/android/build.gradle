@@ -6,7 +6,7 @@ version = '0.1.0'
 
 android {
   namespace 'com.evb.folderaudio'
-  sourceSets.androidTest.assets.srcDirs = [rootProject.file('../assets/sample')]
+  sourceSets.androidTest.assets.srcDirs = [rootProject.file('../assets/sample'), 'src/fixtures']
   defaultConfig {
     versionCode 1
     versionName '0.1.0'

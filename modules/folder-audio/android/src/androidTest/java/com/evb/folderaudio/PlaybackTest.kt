@@ -219,6 +219,22 @@ class PlaybackTest {
     assertTrue("Saved ${store.current().getLong("position")} for ${status().getLong("position")}", kotlin.math.abs(status().getLong("position") - store.current().getLong("position")) < 500)
     file.delete()
   }
+  @Test fun variableBitrateMp3ResumesWhereItsSavedPositionIs() {
+    // coarse-vbr.mp3 lasts 20 s. Its coarse Xing table makes Media3's own seek to 0:15 play from about 0:06.
+    val vbr = book("vbr")
+    vbr.put("tracks", JSONArray().put(track(1).put("uri", "asset:///coarse-vbr.mp3").put("duration", 20000)))
+    store.replaceRoot("test", listOf(vbr))
+    store.save(point("vbr", 15000).put("duration", 20000))
+    // A headset click with nothing loaded, as after Android has closed the paused app.
+    command("toggle")
+    await("resumed") { status().optBoolean("playing") }
+    val started = SystemClock.elapsedRealtime()
+    assertTrue(kotlin.math.abs(status().getLong("position") - 15000) < 1800)
+    while (status().optBoolean("playing") && SystemClock.elapsedRealtime() - started < 20000) SystemClock.sleep(50)
+    val played = SystemClock.elapsedRealtime() - started
+    // Exactly the last 5 s play. Starting at 0:06 would take 14 s.
+    assertTrue("Played $played ms after resuming at 0:15", played in 4000..6500)
+  }
   @Test fun mediaSessionCanResumeWithoutOpeningTheReactScreen() {
     val token = SessionToken(context, android.content.ComponentName(context, PlaybackService::class.java))
     lateinit var future: com.google.common.util.concurrent.ListenableFuture<MediaController>

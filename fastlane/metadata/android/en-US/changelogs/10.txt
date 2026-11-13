@@ -1,0 +1,3 @@
+Resuming an MP3 now starts exactly where you stopped.
+
+In variable-bitrate MP3s, resuming after the app had been closed, or jumping, could start the audio seconds or, in long files, minutes before the time shown. Playback now finds the exact place in the file.

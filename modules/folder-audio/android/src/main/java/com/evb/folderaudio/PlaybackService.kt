@@ -11,6 +11,7 @@ import android.view.KeyEvent
 import androidx.media3.common.*
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
@@ -59,7 +60,7 @@ class PlaybackService : MediaSessionService() {
   override fun onCreate() {
     super.onCreate()
     store = LibraryStore(applicationContext)
-    player = ExoPlayer.Builder(this)
+    player = ExoPlayer.Builder(this, DefaultMediaSourceFactory(this, ExactSeekingExtractorsFactory(this)))
       .setAudioAttributes(AudioAttributes.Builder().setContentType(C.AUDIO_CONTENT_TYPE_SPEECH).setUsage(C.USAGE_MEDIA).build(), true)
       .setHandleAudioBecomingNoisy(true)
       .setWakeMode(C.WAKE_MODE_LOCAL)
