@@ -2,7 +2,7 @@
 
 | Store | Status | Account needed | Where |
 | --- | --- | --- | --- |
-| GitHub Releases | Published, v0.3.6 | none | <https://github.com/evb0110/evb-folder-player/releases> |
+| GitHub Releases | Published, v0.3.7 | none | <https://github.com/evb0110/evb-folder-player/releases> |
 | IzzyOnDroid | Not submitted; current AI policy conflicts with generated app code | Codeberg | <https://izzyondroid.org/docs/general/AppInclusionPolicy/#ai-policy> |
 | F-Droid | Published since October 16, 2026; new tags are added by F-Droid's update bot | none for updates | <https://f-droid.org/packages/com.evb.folderplayer/> |
 
